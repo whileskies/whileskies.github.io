@@ -142,10 +142,10 @@
 </nav>
 
     <div class="banner" id="banner" parallax=true
-         style="background: url('/img/default.png') no-repeat center center;
+         style="background: url('/img/bg.jpg') no-repeat center center;
            background-size: cover;">
       <div class="full-bg-img">
-        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0)">
           <div class="page-header text-center fade-in-up">
             <span class="h2" id="subtitle" title="whileskies的个人博客">
               
@@ -182,22 +182,22 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
-        <a href="/2021/07/08/lab10-mmap/" target="_self">
-          lab10-mmap
+        <a href="/2021/07/11/6-S081-Lab11-networking/" target="_self">
+          6.S081-Lab11: networking
         </a>
       </h1>
 
       <p class="index-excerpt">
-        <a href="/2021/07/08/lab10-mmap/" target="_self">
+        <a href="/2021/07/11/6-S081-Lab11-networking/" target="_self">
           
           
             
           
-          Lab10需要为xv6实现简易版的mmap和munmap系统调用，mmap允许对进程的地址空间进行详细控制，可以用来进程间共享内存、将文件映射到地址空间等，本lab仅仅实现内存映射文件。
-mmap任务mmap的接口格式如下：
-1void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
+          Lab11: networkingLab11为xv6编写网卡驱动，使得网络协议栈（IP、UDP、ARP）能够正常运行。
+networking实现
+实现e1000_transmit()
 
-在本la
+e1000_transmit()函数接收一mbuf，mbuf包含了将要发送的以太网帧。由于网卡采用DMA传输数据，要发送数据帧，要告诉DMA控制器数据帧的起始内存地址和长度。因此内存中维护了tx_ring环形传送描
         </a>
       </p>
 
@@ -205,17 +205,24 @@ mmap任务mmap的接口格式如下：
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2021-07-08 15:39" pubdate>
-              2021-07-08
+            <time datetime="2021-07-11 19:45" pubdate>
+              2021-07-11
             </time>
           </div>
         
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/OS/">OS</a>
+            
+          </div>
         
         
           <div class="post-meta">
             <i class="iconfont icon-tags"></i>
             
-              <a href="/tags/os/">os</a>
+              <a href="/tags/6-S081/">6.S081</a>
             
           </div>
         
@@ -229,19 +236,20 @@ mmap任务mmap的接口格式如下：
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
-        <a href="/2021/07/08/hello-world/" target="_self">
-          Hello World
+        <a href="/2021/07/11/6-S081-Lab10-mmap/" target="_self">
+          6.S081-Lab10: mmap
         </a>
       </h1>
 
       <p class="index-excerpt">
-        <a href="/2021/07/08/hello-world/" target="_self">
+        <a href="/2021/07/11/6-S081-Lab10-mmap/" target="_self">
           
           
             
           
-          Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub.
-Quick
+          Lab10: mmapLab10需要为xv6实现简易版的mmap和munmap系统调用，mmap允许对进程的地址空间进行详细控制，可以用来进程间共享内存、将文件映射到进程地址空间等，本lab仅仅实现内存映射文件。
+mmap任务mmap的接口格式如下：
+1void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t 
         </a>
       </p>
 
@@ -249,12 +257,26 @@ Quick
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2021-07-08 14:27" pubdate>
-              2021-07-08
+            <time datetime="2021-07-11 19:45" pubdate>
+              2021-07-11
             </time>
           </div>
         
         
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/OS/">OS</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/6-S081/">6.S081</a>
+            
+          </div>
         
       </div>
     </article>
@@ -266,23 +288,20 @@ Quick
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
-        <a href="/2021/07/08/Hello-world-0/" target="_self">
-          Hello world
+        <a href="/2021/07/11/6-S081-Lab9-file-system/" target="_self">
+          6.S081-Lab9: file system
         </a>
       </h1>
 
       <p class="index-excerpt">
-        <a href="/2021/07/08/Hello-world-0/" target="_self">
+        <a href="/2021/07/11/6-S081-Lab9-file-system/" target="_self">
           
           
             
           
-          测试网站
-hhhhh
-😁😁😁
-😀😀😀
-hexo client测试
-
+          Lab9: file systemlab9是为xv6文件系统增加支持大文件的功能以及软链接功能。
+Large files任务当前的xv6文件被限制在268个块内， 每一块1024字节，这个限制由于xv6的inode结点包含12个直接块号，一个单一的间接块号，间接块号可以存储256个数据块块号，因此总共是12 + 256 = 268块。
+该部分需要增加xv6文件的最大大小，通过为xv6引入二级间接块
         </a>
       </p>
 
@@ -290,18 +309,410 @@ hexo client测试
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2021-07-08 02:29" pubdate>
-              2021-07-08
+            <time datetime="2021-07-11 19:44" pubdate>
+              2021-07-11
             </time>
           </div>
         
         
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/OS/">OS</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/6-S081/">6.S081</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2021/07/11/6-S081-Lab8-locks/" target="_self">
+          6.S081-Lab8: locks
+        </a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/2021/07/11/6-S081-Lab8-locks/" target="_self">
+          
+          
+            
+          
+          Lab8: locksLab8通过重新设计内核的一些代码，将原本粗粒度的锁更改为细粒度的锁来增加并行度。多核机器上弱并行度的一个通用的标志是具有较高的锁的争用，提高并行度通常涉及到修改数据结构和加锁策略。本实验需要重新设计xv6的memory allocator和block cache两个模块的数据结构和加锁策略，来提高并行度。
+Memory allocator任务在原本xv6的kalloc()和
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2021-07-11 19:44" pubdate>
+              2021-07-11
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/OS/">OS</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/6-S081/">6.S081</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2021/07/11/6-S081-Lab7-Multithreading/" target="_self">
+          6.S081-Lab7: Multithreading
+        </a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/2021/07/11/6-S081-Lab7-Multithreading/" target="_self">
+          
+          
+            
+          
+          Lab7: Multithreadinglab7为三个多线程相关的任务：实现用户态线程、使用多线程加速程序、实现一个线程屏障。
+Uthread: switching between threads任务设计并实现一个用户态线程的上下文切换机制（其实类似于协程）。
+过程
+定义context结构，用于保存上下文寄存器
+
+当从一个线程切换到另一个线程时，需要保存切换前线程的上下文，恢复切换后线程的上下文。
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2021-07-11 19:44" pubdate>
+              2021-07-11
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/OS/">OS</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/6-S081/">6.S081</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2021/07/11/6-S081-Lab6-Copy-on-Write-Fork-for-xv6/" target="_self">
+          6.S081-Lab6: Copy-on-Write Fork for xv6
+        </a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/2021/07/11/6-S081-Lab6-Copy-on-Write-Fork-for-xv6/" target="_self">
+          
+          
+            
+          
+          Lab6: Copy-on-Write Fork for xv6lab6实现fork()的COW
+虚拟内存提供一个中间层：内核通过使得页表项非法或者只读来拦截内存引用，导致页错误，继而通过改变页表项修改实际的物理地址；计算机系统领域有句名言：计算机系统的任何问题都可以通过加一个中间层来解决；lazy lab就是一个例子，该实验实现了另一个例子：写时复制fork
+问题xv6中的fork()系统调用会
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2021-07-11 19:44" pubdate>
+              2021-07-11
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/OS/">OS</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/6-S081/">6.S081</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2021/07/11/6-S081-Lab5-xv6-lazy-page-allocation/" target="_self">
+          6.S081-Lab5: xv6 lazy page allocation
+        </a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/2021/07/11/6-S081-Lab5-xv6-lazy-page-allocation/" target="_self">
+          
+          
+            
+          
+          Lab5: xv6 lazy page allocationlab5主要是为sbrk()系统调用实现懒分配
+os可以使用页表实现很多技巧，其中一个是对于用户空间堆内存的懒分配，xv6应用程序使用sbrk()系统调用来向内核申请堆内存；在未修改版本的xv6中，sbrk()分配物理页，并将其映射到进程的虚拟地址空间，对一个大的堆内存申请需求，内核需要一段时间去分配并且映射到页表；另外，一些程序会申请比
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2021-07-11 19:44" pubdate>
+              2021-07-11
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/OS/">OS</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/6-S081/">6.S081</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2021/07/11/6-S081-Lab4-traps/" target="_self">
+          6.S081-Lab4: traps
+        </a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/2021/07/11/6-S081-Lab4-traps/" target="_self">
+          
+          
+            
+          
+          Lab4: trapsLab4为函数调用以及陷入相关的实验
+RISC-V assembly (easy)该部分为一系列RISC-V汇编相关的问题，阅读user/call.asm对应的call.asm汇编文件，回答下面问题：
+
+哪些寄存器包含函数的参数，例如，对于main调用printf函数，哪个寄存器存参数13？
+
+对于RISC-V，前8个参数会放置在a0-a7寄存器，a2放置参数13，如下代码所
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2021-07-11 19:43" pubdate>
+              2021-07-11
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/OS/">OS</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/6-S081/">6.S081</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2021/07/11/6-S081-Lab3-page-tables/" target="_self">
+          6.S081-Lab3: page tables
+        </a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/2021/07/11/6-S081-Lab3-page-tables/" target="_self">
+          
+          
+            
+          
+          Lab3: page tablesLab3为3个页表相关实验，用于理解os的页表机制
+Print a page table (easy)任务按层次输出多级页表的页表项，定义函数vmprint()，参数为level-2级页表地址pagetable_t，并输出pid为1的进程的用户页表
+可以参照freewalk进行递归遍历
+123456789101112131415161718192021222324
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2021-07-11 19:43" pubdate>
+              2021-07-11
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/OS/">OS</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/6-S081/">6.S081</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2021/07/11/6-S081-Lab2-system-calls/" target="_self">
+          6.S081-Lab2: system calls
+        </a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/2021/07/11/6-S081-Lab2-system-calls/" target="_self">
+          
+          
+            
+          
+          Lab2: system callsLab2为xv6添加一些系统调用，以便了解系统调用过程
+System call tracing (moderate)任务添加一个trace系统调用，参数为系统调用号掩码，用于追踪系统调用的路径以及返回值
+过程
+首先为proc.h中的proc结构体添加一个跟踪掩码字段：
+
+12345678910// these are private to the process
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2021-07-11 19:40" pubdate>
+              2021-07-11
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/OS/">OS</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/6-S081/">6.S081</a>
+            
+          </div>
         
       </div>
     </article>
   </div>
 
 
+
+  <nav aria-label="navigation">
+    <span class="pagination" id="pagination">
+      <span class="page-number current">1</span><a class="page-number" href="/page/2/#board">2</a><a class="extend next" rel="next" href="/page/2/#board"><i class="iconfont icon-arrowright"></i></a>
+    </span>
+  </nav>
 
 
 

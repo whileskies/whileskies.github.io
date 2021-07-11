@@ -18,7 +18,7 @@
   <meta name="author" content="whileskies">
   <meta name="keywords" content="">
   
-  <title>lab10-mmap - Hexo</title>
+  <title>6.S081-Lab10: mmap - Hexo</title>
 
   <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" />
 
@@ -158,12 +158,12 @@
 </nav>
 
     <div class="banner" id="banner" parallax=true
-         style="background: url('/img/default.png') no-repeat center center;
+         style="background: url('/img/bg.jpg') no-repeat center center;
            background-size: cover;">
       <div class="full-bg-img">
-        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.2)">
           <div class="page-header text-center fade-in-up">
-            <span class="h2" id="subtitle" title="lab10-mmap">
+            <span class="h2" id="subtitle" title="6.S081-Lab10: mmap">
               
             </span>
 
@@ -173,8 +173,8 @@
   
     <span class="post-meta">
       <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-      <time datetime="2021-07-08 15:39" pubdate>
-        2021年7月8日 下午
+      <time datetime="2021-07-11 19:45" pubdate>
+        2021年7月11日 晚上
       </time>
     </span>
   
@@ -233,14 +233,14 @@
         <div class="py-5" id="board">
           <article class="post-content mx-auto">
             <!-- SEO header -->
-            <h1 style="display: none">lab10-mmap</h1>
+            <h1 style="display: none">6.S081-Lab10: mmap</h1>
             
             <div class="markdown-body">
-              <p>Lab10需要为xv6实现简易版的mmap和munmap系统调用，mmap允许对进程的地址空间进行详细控制，可以用来进程间共享内存、将文件映射到地址空间等，本lab仅仅实现内存映射文件。</p>
+              <h2 id="Lab10-mmap"><a href="#Lab10-mmap" class="headerlink" title="Lab10: mmap"></a>Lab10: mmap</h2><p>Lab10需要为xv6实现简易版的mmap和munmap系统调用，mmap允许对进程的地址空间进行详细控制，可以用来进程间共享内存、将文件映射到进程地址空间等，本lab仅仅实现内存映射文件。</p>
 <h4 id="mmap"><a href="#mmap" class="headerlink" title="mmap"></a>mmap</h4><h5 id="任务"><a href="#任务" class="headerlink" title="任务"></a>任务</h5><p>mmap的接口格式如下：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-function"><span class="hljs-keyword">void</span> *<span class="hljs-title">mmap</span><span class="hljs-params">(<span class="hljs-keyword">void</span> *addr, <span class="hljs-keyword">size_t</span> length, <span class="hljs-keyword">int</span> prot, <span class="hljs-keyword">int</span> flags, <span class="hljs-keyword">int</span> fd, <span class="hljs-keyword">off_t</span> offset)</span></span><br></code></pre></td></tr></table></figure>
 
-<p>在本lab中假设addr总是0，由内核决定所映射文件的虚拟地址，当返回0xffffffffffffffff 代表失败；length是映射的字节数，可能和文件大小不一致；prot表示被映射的内存是否可读、可写、可执行，可以假设prot是可读、可写或可读可写的；flags要么是MAP_SHARED，表示对于所映射内存的修改应该写回文件，要么是MAP_PRIVATE，表示不会写回文件，不用考虑其他的bits；fd是被映射文件的文件描述符；offset是文件的偏移，可以假定总为0（映射文件时总是从文件开始映射）。</p>
+<p>在本lab中假设addr总是0，由内核决定所映射文件的虚拟地址，当返回0xffffffffffffffff 代表失败；length是映射的字节数，可能和文件大小不一致；prot表示被映射的内存是否可读、可写、可执行，可以假设prot是可读、可写或可读可写的；flags要么是MAP_SHARED，表示对于所映射内存的修改应该写回文件，要么是MAP_PRIVATE，表示不用写回文件，不用考虑其他的bits；fd是被映射文件的文件描述符；offset是文件的偏移，可以假定总为0（映射文件时总是从文件起始进行映射）。</p>
 <p>如果多个进程映射同一MAP_SHARED文件，可以不用实现共享同一物理页。</p>
 <p>munmap的接口格式如下：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">munmap</span><span class="hljs-params">(uint64 addr, <span class="hljs-keyword">int</span> length)</span></span><br></code></pre></td></tr></table></figure>
@@ -265,7 +265,7 @@
 <ol start="3">
 <li>实现mmap缺页中断处理</li>
 </ol>
-<p>上面的mmap系统调用只是为进程标记了映射区域，实际上并未映射物理内存，这里仍然是lazy分配的思想，等到进程实际访问映射区域时，产生缺页中断，再为所缺的虚拟页分配物理内存，通过页表建立映射，并读取文件到物理内存，中断返回后进程再次访问该地址可正常访问该文件的映射。</p>
+<p>上面的mmap系统调用只是为进程标记了映射区域，实际上并未映射物理内存，这里仍然是lazy分配的思想，等到进程实际访问映射区域时，产生缺页中断，再为所缺的虚拟页分配物理页，通过页表建立映射，并读取文件到物理页中，中断返回后进程再次访问该地址可正常访问该文件的映射。</p>
 <p>读取文件时的偏移应为该文件在vma中起始偏移 + 该页与vma起始页的偏移。</p>
 <p>代码如下所示：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// vm.c</span><br><span class="hljs-comment">// Mmap pages does not exist, page fault will occur.</span><br><span class="hljs-comment">// Alloc a physical page and read the file to it.</span><br><span class="hljs-function"><span class="hljs-keyword">int</span> </span><br><span class="hljs-function"><span class="hljs-title">mmap_pgfault</span><span class="hljs-params">(uint64 stval, struct proc *p)</span></span><br><span class="hljs-function"></span>&#123;<br>  stval = PGROUNDDOWN(stval);<br><br>  <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">vma</span> *<span class="hljs-title">a</span> =</span> <span class="hljs-number">0</span>;<br>  <span class="hljs-comment">// Which vma?</span><br>  <span class="hljs-keyword">for</span>(<span class="hljs-keyword">int</span> i = <span class="hljs-number">0</span>; i &lt; NVMA; i++)&#123;<br>    <span class="hljs-keyword">if</span>(p-&gt;vmas[i].used &amp;&amp; stval &gt;= p-&gt;vmas[i].start &amp;&amp; stval &lt; p-&gt;vmas[i].end)&#123;<br>      a = &amp;p-&gt;vmas[i];<br>      <span class="hljs-keyword">break</span>;<br>    &#125;<br>  &#125;<br><br>  <span class="hljs-keyword">if</span>(a == <span class="hljs-number">0</span>) <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br><br>  <span class="hljs-keyword">char</span> *pa = kalloc();<br>  <span class="hljs-keyword">if</span>(pa == <span class="hljs-number">0</span>) <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>  <span class="hljs-built_in">memset</span>(pa, <span class="hljs-number">0</span>, PGSIZE);<br><br>  <span class="hljs-keyword">int</span> perm = PTE_U;<br>  <span class="hljs-keyword">if</span>(a-&gt;permissions &amp; PROT_READ)<br>    perm |= PTE_R;<br>  <span class="hljs-keyword">if</span>(a-&gt;permissions &amp; PROT_WRITE)<br>    perm |= PTE_W;<br>  <span class="hljs-keyword">if</span>(mappages(p-&gt;pagetable, PGROUNDDOWN(stval), PGSIZE, (uint64)pa, perm) != <span class="hljs-number">0</span>)<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>  <br>  uint64 off = stval - a-&gt;start + a-&gt;offset;<br>  ilock(a-&gt;f-&gt;ip);<br>  <span class="hljs-keyword">if</span>(readi(a-&gt;f-&gt;ip, <span class="hljs-number">0</span>, (uint64)pa, off, PGSIZE) &lt;= <span class="hljs-number">0</span>)&#123;<br>    iunlock(a-&gt;f-&gt;ip);<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>  &#125;<br>  iunlock(a-&gt;f-&gt;ip);<br><br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br><br><span class="hljs-comment">// trap.c</span><br>  &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (r_scause() == <span class="hljs-number">13</span> || r_scause() == <span class="hljs-number">15</span>) &#123;<br>    uint64 stval = r_stval();<br>    <span class="hljs-keyword">if</span>(mmap_pgfault(stval, p) != <span class="hljs-number">0</span>)&#123;<br>      <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;usertrap(): unexpected scause %p pid=%d\n&quot;</span>, r_scause(), p-&gt;pid);<br>      <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;            sepc=%p stval=%p\n&quot;</span>, r_sepc(), r_stval());<br>      p-&gt;killed = <span class="hljs-number">1</span>;<br>    &#125;<br><br>  &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>((which_dev = devintr()) != <span class="hljs-number">0</span>)&#123;<br>    <span class="hljs-comment">// ok</span><br>  &#125;<br></code></pre></td></tr></table></figure>
@@ -275,7 +275,7 @@
 </ol>
 <p><code>munmap()</code>取消映射区域的一部分，首先要找到所属的vma，取消的映射区域分为三种情况：取消vma起始地址的一段映射、取消以vma结束地址结束的一段映射、取消整个vma映射，根据三种情况得出所取消映射区域的起始地址（unstart）与长度（unlen），并更新取消一段区域后的vma。</p>
 <p>取消映射区域的起始地址需要按页对其，长度也需要是页大小的整数倍。</p>
-<p>如果该vma的标志为MAP_SHARED时，应该把所取消的区域的修改写回到文件中去，这里为了简单不考虑页表中的dirty位，直接写回文件；如果取消映射的页还没用通过<code>mmap_pgfault()</code>映射物理页，也就代表着没有访问修改，则不用写回。</p>
+<p>如果该vma的标志为MAP_SHARED时，应该把所取消的区域的修改写回到文件中去，这里为了简单不考虑页表中的dirty位，直接写回文件；如果取消映射的页还没有通过<code>mmap_pgfault()</code>映射物理页，也就代表着没有访问修改，则不用写回。</p>
 <p>如果取消了vma整段区域的映射，代表着该文件映射的取消，应该减少该文件的引用计数。</p>
 <p>代码如下：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// vm.c</span><br><span class="hljs-comment">// Whether the virtual address is mapped.</span><br><span class="hljs-function"><span class="hljs-keyword">int</span></span><br><span class="hljs-function"><span class="hljs-title">vm_exists</span><span class="hljs-params">(<span class="hljs-keyword">pagetable_t</span> pagetable, uint64 va)</span></span><br><span class="hljs-function"></span>&#123;<br>  <span class="hljs-keyword">pte_t</span> *pte;<br>  <span class="hljs-keyword">return</span> (pte = walk(pagetable, va, <span class="hljs-number">0</span>)) != <span class="hljs-number">0</span> &amp;&amp; (*pte &amp; PTE_V) != <span class="hljs-number">0</span>;<br>&#125;<br><br><span class="hljs-comment">//Find the VMA for the address range and unmap the specified pages.</span><br><span class="hljs-function"><span class="hljs-keyword">int</span></span><br><span class="hljs-function"><span class="hljs-title">munmap</span><span class="hljs-params">(uint64 addr, <span class="hljs-keyword">int</span> length)</span></span><br><span class="hljs-function"></span>&#123;<br>  <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">proc</span> *<span class="hljs-title">p</span> =</span> myproc();<br>  <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">vma</span> *<span class="hljs-title">a</span> =</span> <span class="hljs-number">0</span>;<br>  addr = PGROUNDDOWN(addr);<br><br>  <span class="hljs-keyword">for</span>(<span class="hljs-keyword">int</span> i = <span class="hljs-number">0</span>; i &lt; NVMA; i++)&#123;<br>    <span class="hljs-keyword">if</span>(p-&gt;vmas[i].used &amp;&amp; addr &gt;= p-&gt;vmas[i].start &amp;&amp; addr &lt; p-&gt;vmas[i].end)&#123;<br>      a = &amp;p-&gt;vmas[i];<br>      <span class="hljs-keyword">break</span>;<br>    &#125;<br>  &#125;<br><br>  <span class="hljs-keyword">if</span> (a == <span class="hljs-number">0</span>) <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br><br>  uint64 unstart, unlen;<br>  uint64 start = a-&gt;start, offset = a-&gt;offset, orilen = a-&gt;length;<br><br>  <span class="hljs-keyword">if</span>(addr == a-&gt;start)&#123;<br>    <span class="hljs-comment">// Unmap at the start</span><br>    unstart = addr;<br>    unlen = PGROUNDUP(length) &lt; a-&gt;length ? PGROUNDUP(length) : a-&gt;length;<br><br>    a-&gt;start = unstart + unlen; <br>    a-&gt;length = a-&gt;end - a-&gt;start;<br>    a-&gt;offset = a-&gt;offset + unlen;<br>  &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(addr + length &gt;= a-&gt;end)&#123;<br>    <span class="hljs-comment">// Unmap at the end</span><br>    unstart = addr;<br>    unlen = a-&gt;end - unstart;<br><br>    a-&gt;end = unstart;<br>    a-&gt;length = a-&gt;end - a-&gt;start;<br>  &#125; <span class="hljs-keyword">else</span>&#123;<br>    <span class="hljs-comment">// Unmap the whole region</span><br>    unstart = a-&gt;start;<br>    unlen = a-&gt;end - a-&gt;start;<br>  &#125;<br>  <br>  <span class="hljs-keyword">for</span>(<span class="hljs-keyword">int</span> i = <span class="hljs-number">0</span>; i &lt; unlen / PGSIZE; i++)&#123;<br>    uint64 va = unstart + i * PGSIZE;<br>    <span class="hljs-comment">// May not be alloced due to lazy alloc through page fault.</span><br>    <span class="hljs-keyword">if</span>(vm_exists(p-&gt;pagetable, va))&#123;<br>      <span class="hljs-keyword">if</span>(a-&gt;flags &amp; MAP_SHARED)&#123;<br>        munmap_writeback(va, PGSIZE, start, offset, a);<br>      &#125;<br><br>      uvmunmap(p-&gt;pagetable, va, <span class="hljs-number">1</span>, <span class="hljs-number">1</span>);<br>    &#125;<br>  &#125;<br><br>  <span class="hljs-keyword">if</span>(unlen == orilen)&#123;<br>    fileclose(a-&gt;f);<br>    a-&gt;used = <span class="hljs-number">0</span>;<br>  &#125;<br>  <br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br><br><span class="hljs-comment">// sysfile.c</span><br><span class="hljs-function">uint64</span><br><span class="hljs-function"><span class="hljs-title">sys_munmap</span><span class="hljs-params">(<span class="hljs-keyword">void</span>)</span></span><br><span class="hljs-function"></span>&#123;<br>  uint64 addr;<br>  <span class="hljs-keyword">int</span> length;<br><br>  <span class="hljs-keyword">if</span>(argaddr(<span class="hljs-number">0</span>, &amp;addr) || argint(<span class="hljs-number">1</span>, &amp;length))<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>  <br>  <span class="hljs-keyword">return</span> munmap(addr, length);<br>&#125;<br></code></pre></td></tr></table></figure>
@@ -283,7 +283,7 @@
 <ol start="5">
 <li>实现munmap_writeback</li>
 </ol>
-<p><code>munmap_writeback()</code>用于取消映射时将映射页数据写回文件，写回时应注意写文件的起始偏移，与读文件类似，写偏移为该文件在vma中起始偏移 + 该页与vma起始页的偏移，此外该文件剩余大小不足一页大小，应该按照实际剩余大小来写。</p>
+<p><code>munmap_writeback()</code>用于取消映射时将修改的映射页写回文件，写回时应注意写文件的起始偏移，与读文件类似，写偏移为该文件在vma中起始偏移 + 该页与vma起始页的偏移，此外该文件剩余大小不足一页大小时，应该按照实际剩余大小来写。</p>
 <p>写文件时和<code>filewrite()</code>类似，将写操作打包为多次日志事务来写。</p>
 <p>代码如下：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// vm.c</span><br><span class="hljs-comment">// If an unmapped page has been modified and the file is mapped MAP_SHARED, </span><br><span class="hljs-comment">// write the page back to the file. </span><br><span class="hljs-function"><span class="hljs-keyword">int</span></span><br><span class="hljs-function"><span class="hljs-title">munmap_writeback</span><span class="hljs-params">(uint64 unstart, uint64 unlen, uint64 start, uint64 offset, struct vma *a)</span></span><br><span class="hljs-function"></span>&#123;<br>  <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">file</span> *<span class="hljs-title">f</span> =</span> a-&gt;f;<br>  uint off = unstart - start + offset;<br>  uint size;<br><br>  ilock(f-&gt;ip);<br>  size = f-&gt;ip-&gt;size;<br>  iunlock(f-&gt;ip);<br><br>  <span class="hljs-keyword">if</span>(off &gt;= size) <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br><br>  uint n = unlen &lt; size - off ? unlen : size - off;<br><br>  <span class="hljs-keyword">int</span> r, ret = <span class="hljs-number">0</span>;<br>  <span class="hljs-keyword">int</span> max = ((MAXOPBLOCKS<span class="hljs-number">-1</span><span class="hljs-number">-1</span><span class="hljs-number">-2</span>) / <span class="hljs-number">2</span>) * BSIZE;<br>  <span class="hljs-keyword">int</span> i = <span class="hljs-number">0</span>;<br>  <span class="hljs-keyword">while</span>(i &lt; n)&#123;<br>    <span class="hljs-keyword">int</span> n1 = n - i;<br>    <span class="hljs-keyword">if</span>(n1 &gt; max)<br>      n1 = max;<br><br>    begin_op();<br>    ilock(f-&gt;ip);<br>    r = writei(f-&gt;ip, <span class="hljs-number">1</span>, unstart, off + i, n1);<br>    iunlock(f-&gt;ip);<br>    end_op();<br><br>    <span class="hljs-keyword">if</span>(r != n1)&#123;<br>      <span class="hljs-comment">// error from writei</span><br>      <span class="hljs-keyword">break</span>;<br>    &#125;<br>    i += r;<br>  &#125;<br>  ret = (i == n ? n : <span class="hljs-number">-1</span>);<br><br>  <span class="hljs-keyword">return</span> ret;<br>&#125;<br></code></pre></td></tr></table></figure>
@@ -308,11 +308,18 @@
             <div>
               <div class="post-metas mb-3">
                 
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/OS/">OS</a>
+                    
+                  </div>
+                
                 
                   <div class="post-meta">
                     <i class="iconfont icon-tags"></i>
                     
-                      <a class="hover-with-bg" href="/tags/os/">os</a>
+                      <a class="hover-with-bg" href="/tags/6-S081/">6.S081</a>
                     
                   </div>
                 
@@ -329,12 +336,18 @@
                   <article class="post-prev col-6">
                     
                     
+                      <a href="/2021/07/11/6-S081-Lab11-networking/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">6.S081-Lab11: networking</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2021/07/08/hello-world/">
-                        <span class="hidden-mobile">Hello World</span>
+                      <a href="/2021/07/11/6-S081-Lab9-file-system/">
+                        <span class="hidden-mobile">6.S081-Lab9: file system</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>

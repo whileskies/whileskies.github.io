@@ -1,0 +1,573 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="whileskies">
+  <meta name="keywords" content="">
+  
+  <title>6.S081-Lab6: Copy-on-Write Fork for xv6 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10.7.2/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"whileskies.xyz","root":"/","version":"1.8.11","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}},"search_path":"/local-search.xml"};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>whileskies</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/img/bg.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.2)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="6.S081-Lab6: Copy-on-Write Fork for xv6">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2021-07-11 19:44" pubdate>
+        2021年7月11日 晚上
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      2.3k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      29
+       分钟
+    </span>
+  
+
+  
+  
+    
+      <!-- 不蒜子统计文章PV -->
+      <span id="busuanzi_container_page_pv" style="display: none">
+        <i class="iconfont icon-eye" aria-hidden="true"></i>
+        <span id="busuanzi_value_page_pv"></span> 次
+      </span>
+    
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">6.S081-Lab6: Copy-on-Write Fork for xv6</h1>
+            
+            <div class="markdown-body">
+              <h2 id="Lab6-Copy-on-Write-Fork-for-xv6"><a href="#Lab6-Copy-on-Write-Fork-for-xv6" class="headerlink" title="Lab6: Copy-on-Write Fork for xv6"></a>Lab6: Copy-on-Write Fork for xv6</h2><p>lab6实现<code>fork()</code>的COW</p>
+<p>虚拟内存提供一个中间层：内核通过使得页表项非法或者只读来拦截内存引用，导致页错误，继而通过改变页表项修改实际的物理地址；计算机系统领域有句名言：计算机系统的任何问题都可以通过加一个中间层来解决；lazy lab就是一个例子，该实验实现了另一个例子：写时复制fork</p>
+<h4 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h4><p>xv6中的<code>fork()</code>系统调用会拷贝父进程的用户内存空间到子进程；如果父进程非常大，拷贝可能会消耗很长时间，甚至，拷贝过程通常产生大的浪费，比如<code>fork()</code>调用通常会伴随着子进程调用<code>exec()</code>并清除掉所拷贝的内存，很可能根本就没有使用过这些内存；另一方面，如果父进程与子进程共享相同的物理页，当其中一个希望写该物理页时，需要拷贝该物理页</p>
+<h4 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h4><p>写时复制(COW) <code>fork()</code>的目标是推迟分配和拷贝物理页直到真正实际需要拷贝时</p>
+<p><code>COW fork()</code>仅仅为子进程创建页表，并且使得页表项中的用户地址指向父进程相应的物理页；<code>COW fork()</code>标记父子进程的页表项均为只读的（不可写的）；当有一方尝试写这些COW页时，CPU会产生页错误；内核页错误处理程序处理页错误，为出错进程分配物理页，复制原始页数据到新的物理页，修改相应页表项指向新物理页，这时将相应页表项标记为可写的；当页错误处理程序返回，用户进程可以正常写所复制的页</p>
+<p><code>COW fork()</code>释放物理页时有些棘手，一个物理页可能会被多个进程的页表所引用，应该当最后一个引用取消时才能释放</p>
+<h4 id="Implement-copy-on-write-hard"><a href="#Implement-copy-on-write-hard" class="headerlink" title="Implement copy-on write(hard)"></a>Implement copy-on write(hard)</h4><h5 id="任务"><a href="#任务" class="headerlink" title="任务"></a>任务</h5><p>完成写时复制<code>fork()</code>，修改后能够通过<code>cowtest</code>和<code>usertests</code></p>
+<h5 id="过程"><a href="#过程" class="headerlink" title="过程"></a>过程</h5><ol>
+<li>引用计数实现</li>
+</ol>
+<p>由上所述，COW时一个物理页可能会被多个进程的页表引用，如一个进程调用<code>fork()</code>，子进程再次调用<code>fork()</code>…，那么只有没有进程引用该物理页时该物理页才能被释放，可以使用引用计数解决，每个物理页对应一个数值，表示当前被引用的进程个数，当个数为0时释放</p>
+<p>实现时可以维护一个引用计数数组，数组的第<code>i</code>项表示从<code>KERNBASE</code>开始的第<code>i</code>个物理页的引用计数，最大物理页的个数为<code>(PHYSTOP - KERNBASE) / PGSIZE</code>，在<code>kalloc.c</code>中定义引用数组，由于是全局变量，初始值均为0：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">uint16 pgs_rfc[(PHYSTOP - KERNBASE) / PGSIZE];<br></code></pre></td></tr></table></figure>
+
+<p>给出一个物理地址<code>get_pg_rfc()</code>函数获取相应物理页的引用计数，<code>set_pg_rfc()</code>设置物理页的引用计数：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-function">uint16</span><br><span class="hljs-function"><span class="hljs-title">get_pg_rfc</span><span class="hljs-params">(uint64 pa)</span></span><br><span class="hljs-function"></span>&#123;<br>  <span class="hljs-keyword">return</span> pgs_rfc[(pa - KERNBASE) &gt;&gt; <span class="hljs-number">12</span>];<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">void</span></span><br><span class="hljs-function"><span class="hljs-title">set_pg_rfc</span><span class="hljs-params">(uint64 pa, uint16 rfc)</span></span><br><span class="hljs-function"></span>&#123;<br>  pgs_rfc[(pa - KERNBASE) &gt;&gt; <span class="hljs-number">12</span>] = rfc;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>修改<code>kalloc.c/kfree()</code>，仅当pa对应的物理页引用计数 &lt;= 1时，才释放物理页，当超过一个进程引用物理页时，仅仅将引用数 -1：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">if</span>(((uint64)pa % PGSIZE) != <span class="hljs-number">0</span> || (<span class="hljs-keyword">char</span>*)pa &lt; end || (uint64)pa &gt;= PHYSTOP)<br>  panic(<span class="hljs-string">&quot;kfree&quot;</span>);<br><br>uint16 ref = get_pg_rfc((uint64)pa);<br><span class="hljs-keyword">if</span> (ref &gt; <span class="hljs-number">1</span>) &#123;<br>  set_pg_rfc((uint64)pa, ref - <span class="hljs-number">1</span>);<br>  <span class="hljs-keyword">return</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>修改<code>kalloc.c/kalloc</code>，当分配一个物理页时，该物理页的引用计数为1：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">if</span>(r) &#123;<br>  <span class="hljs-built_in">memset</span>((<span class="hljs-keyword">char</span>*)r, <span class="hljs-number">5</span>, PGSIZE); <span class="hljs-comment">// fill with junk</span><br>  set_pg_rfc((uint64)r, <span class="hljs-number">1</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>修改<code>vm.c/uvmcopy</code>函数为COW</li>
+</ol>
+<p><code>fork()</code>函数通过调用<code>uvmcopy()</code>函数复制父进程的所有物理页，因此需要将其修改为父子进程共享同一物理页，并且相应的页表项均为只读与使用COW标记，同时物理页的引用计数+1</p>
+<p>页表项COW标记在PTE的第8位（RSW预留位）设置，在<code>riscv.h</code>中添加如下宏定义：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> PTE_COW (1L &lt;&lt; 8)</span><br></code></pre></td></tr></table></figure>
+
+<p>修改后的<code>uvmcopy</code>函数代码为：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-function"><span class="hljs-keyword">int</span></span><br><span class="hljs-function"><span class="hljs-title">uvmcopy</span><span class="hljs-params">(<span class="hljs-keyword">pagetable_t</span> old, <span class="hljs-keyword">pagetable_t</span> <span class="hljs-keyword">new</span>, uint64 sz)</span></span><br><span class="hljs-function"></span>&#123;<br>  <span class="hljs-keyword">pte_t</span> *pte;<br>  uint64 pa, i;<br>  uint flags;<br><br>  <span class="hljs-keyword">for</span>(i = <span class="hljs-number">0</span>; i &lt; sz; i += PGSIZE)&#123;<br>    <span class="hljs-keyword">if</span>((pte = walk(old, i, <span class="hljs-number">0</span>)) == <span class="hljs-number">0</span>)<br>      panic(<span class="hljs-string">&quot;uvmcopy: pte should exist&quot;</span>);<br>    <span class="hljs-keyword">if</span>((*pte &amp; PTE_V) == <span class="hljs-number">0</span>)<br>      panic(<span class="hljs-string">&quot;uvmcopy: page not present&quot;</span>);<br>    pa = PTE2PA(*pte);<br>    flags = PTE_FLAGS(*pte);<br><br>    *pte = *pte &amp; ~PTE_W;<br>    *pte = *pte | PTE_COW;<br>    set_pg_rfc(pa, get_pg_rfc(pa) + <span class="hljs-number">1</span>);<br>    <span class="hljs-keyword">if</span>(mappages(<span class="hljs-keyword">new</span>, i, PGSIZE, pa, (flags &amp; ~PTE_W) | PTE_COW) != <span class="hljs-number">0</span>) &#123;<br>      set_pg_rfc(pa, get_pg_rfc(pa) - <span class="hljs-number">1</span>);<br>      <span class="hljs-keyword">goto</span> err;<br>    &#125;<br>  &#125;<br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br><br> err:<br>  uvmunmap(<span class="hljs-keyword">new</span>, <span class="hljs-number">0</span>, i / PGSIZE, <span class="hljs-number">0</span>);<br>  <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ol start="3">
+<li><code>cow()</code>写时复制函数实现</li>
+</ol>
+<p>当<code>COW fork()</code>后，父进程或子进程写被共享的物理页时，需要分配一新物理页，复制被共享的物理页，新物理页对应的页表项标记位可写，被共享物理页引用计数 -1，当引用计数为0时，释放被共享物理页</p>
+<p>在<code>vm.c</code>中添加<code>cow()</code>函数，代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-function"><span class="hljs-keyword">int</span></span><br><span class="hljs-function"><span class="hljs-title">cow</span><span class="hljs-params">(uint64 va, struct proc *p)</span></span><br><span class="hljs-function"></span>&#123;<br>  <span class="hljs-keyword">pte_t</span> *pte = walk(p-&gt;pagetable, va, <span class="hljs-number">0</span>);<br>  <span class="hljs-keyword">if</span>(*pte &amp; PTE_COW) &#123;<br>    <span class="hljs-keyword">char</span> *mem;<br>    uint64 pa = PTE2PA(*pte);<br><br>    <span class="hljs-keyword">if</span>((mem = kalloc()) == <span class="hljs-number">0</span>) <br>      <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br><br>    memmove(mem, (<span class="hljs-keyword">char</span>*)pa, PGSIZE);<br>    uint16 rfc = get_pg_rfc(pa);<br>    rfc--;<br>    set_pg_rfc(pa, rfc);<br>    <span class="hljs-keyword">if</span> (rfc == <span class="hljs-number">0</span>) &#123;<br>      kfree((<span class="hljs-keyword">char</span> *)pa);<br>    &#125;<br><br>    <span class="hljs-keyword">pte_t</span> newpte = PA2PTE(mem);<br>    newpte = ((newpte | PTE_FLAGS(*pte)) | PTE_W) &amp; ~PTE_COW;<br>    *pte = newpte;<br>  &#125; <span class="hljs-keyword">else</span> <br>    <span class="hljs-keyword">return</span> <span class="hljs-number">-2</span>;<br><br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>调用<code>cow()</code></li>
+</ol>
+<p>当父进程或子进程写入数据到只读的共享页时，发生页错误，<code>trap.c/usertrap()</code>函数处理该页错误，当错误码为15时，执行COW，也即<code>cow()</code>函数，trap返回后会写入到合法的物理页，代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c">&#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>((which_dev = devintr()) != <span class="hljs-number">0</span>)&#123;<br>  <span class="hljs-comment">// ok</span><br>&#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(r_scause() == <span class="hljs-number">15</span>) &#123;<br>  uint64 stval = r_stval();<br>  <span class="hljs-keyword">if</span> (cow(stval, p) != <span class="hljs-number">0</span>) &#123;<br>    p-&gt;killed = <span class="hljs-number">1</span>;<br>  &#125;<br>&#125; <span class="hljs-keyword">else</span> &#123;<br></code></pre></td></tr></table></figure>
+
+<p>当父进程或子进程调用如<code>read()</code>之类的系统调用，将内核数据写入用户地址空间，如果该地址实际的物理页为共享页的话，也会发生错误，但是出错时内核正在执行系统调用，不会产生<code>usertrap</code>，因此需要在<code>vm.c/copyout()</code>中增加COW的代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-function"><span class="hljs-keyword">int</span></span><br><span class="hljs-function"><span class="hljs-title">copyout</span><span class="hljs-params">(<span class="hljs-keyword">pagetable_t</span> pagetable, uint64 dstva, <span class="hljs-keyword">char</span> *src, uint64 len)</span></span><br><span class="hljs-function"></span>&#123;<br>  uint64 n, va0, pa0;<br><br>  <span class="hljs-keyword">while</span>(len &gt; <span class="hljs-number">0</span>)&#123;<br>    va0 = PGROUNDDOWN(dstva);<br>    pa0 = walkaddr(pagetable, va0);<br>    <span class="hljs-keyword">if</span>(pa0 == <span class="hljs-number">0</span>)<br>      <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>    cow(va0, myproc());<br>    pa0 = walkaddr(pagetable, va0);<br><br>    n = PGSIZE - (dstva - va0);<br>    <span class="hljs-keyword">if</span>(n &gt; len)<br>      n = len;<br>    memmove((<span class="hljs-keyword">void</span> *)(pa0 + (dstva - va0)), src, n);<br><br>    len -= n;<br>    src += n;<br>    dstva = va0 + PGSIZE;<br>  &#125;<br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ol start="5">
+<li>修改引用计数时加锁</li>
+</ol>
+<p>当修改某物理页引用计数时分为两步：<code>set_pg_rfc(pa, get_pg_rfc(pa) + 1)</code>，首先通过<code>get_pg_rfc()</code>函数获取某物理页的引用计数，之后再通过<code>set_pg_rfc()</code>来修改引用计数，当多个进程同时修改同一物理页的引用计数时，会发生<code>race conditons</code>，如果不加锁，会造成物理页的内存泄露</p>
+<p>举个例子，如果有3个进程共享同一物理页，那么该物理页的引用计数为3，当其中2个进程同时调用<code>kfree()</code>函数释放物理页，在<code>kfree()</code>代码中，2个进程同时执行<code>uint16 ref = get_pg_rfc((uint64)pa)</code>，得到当前引用计数为3，之后一个进程先执行<code>set_pg_rfc((uint64)pa, ref - 1)</code>将该页引用计数变为2，再之后另一个进程同样执行<code>set_pg_rfc((uint64)pa, ref - 1)</code>将该页引用计数变为2，这样最终该页引用计数变为2（正确情况应为1），丢失了一次更新，实际上之后只有1个进程共享该物理页，当该进程也调用<code>kfree()</code>释放物理页时，引用计数从2变为1，而不是直接释放该物理页，最终造成该物理页的泄露，一直不会被回收</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-function"><span class="hljs-keyword">void</span></span><br><span class="hljs-function"><span class="hljs-title">kfree</span><span class="hljs-params">(<span class="hljs-keyword">void</span> *pa)</span></span><br><span class="hljs-function"></span>&#123;<br>  <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">run</span> *<span class="hljs-title">r</span>;</span><br>  <span class="hljs-keyword">if</span>(((uint64)pa % PGSIZE) != <span class="hljs-number">0</span> || (<span class="hljs-keyword">char</span>*)pa &lt; end || (uint64)pa &gt;= PHYSTOP)<br>    panic(<span class="hljs-string">&quot;kfree&quot;</span>);<br><br>  acquire(&amp;rfc_lock);<br>  uint16 ref = get_pg_rfc((uint64)pa);<br>  <span class="hljs-keyword">if</span> (ref &gt; <span class="hljs-number">1</span>) &#123;<br>    set_pg_rfc((uint64)pa, ref - <span class="hljs-number">1</span>);<br>    release(&amp;rfc_lock);<br>    <span class="hljs-keyword">return</span>;<br>  &#125;<br>  release(&amp;rfc_lock);<br><br>  <span class="hljs-comment">// Fill with junk to catch dangling refs.</span><br>  <span class="hljs-built_in">memset</span>(pa, <span class="hljs-number">1</span>, PGSIZE);<br>  r = (struct run*)pa;<br>  acquire(&amp;kmem.lock);<br>  r-&gt;next = kmem.freelist;<br>  kmem.freelist = r;<br>  release(&amp;kmem.lock);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>因此，为解决并发出现的问题，应当把获取引用计数、修改引用计数这两步操作作为一个原子操作，一次只能有一个CPU或进程执行该临界区代码</p>
+<p>首先在<code>kalloc.c</code>定义页引用的自旋锁：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">spinlock</span> <span class="hljs-title">rfc_lock</span>;</span><br></code></pre></td></tr></table></figure>
+
+<p>在<code>kalloc.c/kinit()</code>函数中初始化该自旋锁：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c">kinit()<br>&#123;<br>  initlock(&amp;kmem.lock, <span class="hljs-string">&quot;kmem&quot;</span>);<br>  initlock(&amp;rfc_lock, <span class="hljs-string">&quot;pgs_rfc&quot;</span>);<br>  freerange(end, (<span class="hljs-keyword">void</span>*)PHYSTOP);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>在<code>kalloc.c/kfree()</code>函数中加锁：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c">acquire(&amp;rfc_lock);<br>uint16 ref = get_pg_rfc((uint64)pa);<br><span class="hljs-keyword">if</span> (ref &gt; <span class="hljs-number">1</span>) &#123;<br>  set_pg_rfc((uint64)pa, ref - <span class="hljs-number">1</span>);<br>  release(&amp;rfc_lock);<br>  <span class="hljs-keyword">return</span>;<br>&#125;<br>release(&amp;rfc_lock);<br></code></pre></td></tr></table></figure>
+
+<p>在<code>vm.c/uvmcopy()</code>函数中加锁：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c">acquire(&amp;rfc_lock);<br>set_pg_rfc(pa, get_pg_rfc(pa) + <span class="hljs-number">1</span>);<br>release(&amp;rfc_lock);<br><span class="hljs-keyword">if</span>(mappages(<span class="hljs-keyword">new</span>, i, PGSIZE, pa, (flags &amp; ~PTE_W) | PTE_COW) != <span class="hljs-number">0</span>) &#123;<br>  acquire(&amp;rfc_lock);<br>  set_pg_rfc(pa, get_pg_rfc(pa) - <span class="hljs-number">1</span>);<br>  release(&amp;rfc_lock);<br>  <span class="hljs-keyword">goto</span> err;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>在<code>vm.c/cow</code>中加锁：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c">acquire(&amp;rfc_lock);<br>uint16 rfc = get_pg_rfc(pa);<br>rfc--;<br>set_pg_rfc(pa, rfc);<br>release(&amp;rfc_lock);<br><span class="hljs-keyword">if</span> (rfc == <span class="hljs-number">0</span>) &#123;<br>  kfree((<span class="hljs-keyword">char</span> *)pa);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>实际上这里加锁的粒度比较大，是对访问整个引用数组时加锁，实际上只需对访问特定物理页的引用计数时加锁，但是这样需要的锁过多</p>
+<h4 id="实验测试"><a href="#实验测试" class="headerlink" title="实验测试"></a>实验测试</h4><p><img src="https://whileskies-pic.oss-cn-beijing.aliyuncs.com/20210413175049.png" srcset="/img/loading.gif" lazyload alt="image-20210413175042082"></p>
+<h4 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h4><p><a target="_blank" rel="noopener" href="https://github.com/whileskies/xv6-labs-2020/tree/cow">https://github.com/whileskies/xv6-labs-2020/tree/cow</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/OS/">OS</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/6-S081/">6.S081</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2021/07/11/6-S081-Lab7-Multithreading/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">6.S081-Lab7: Multithreading</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2021/07/11/6-S081-Lab5-xv6-lazy-page-allocation/">
+                        <span class="hidden-mobile">6.S081-Lab5: xv6 lazy page allocation</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments" lazyload>
+                
+                  
+                
+                
+  <div id="valine"></div>
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#valine', function() {
+      Fluid.utils.createScript('https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js', function() {
+        var options = Object.assign(
+          {"appId":"9g01Ua9Sd4wyOYTwdnQxmFD8-gzGzoHsz","appKey":"l6mxYxD3DKx9h1kk0Cm6233n","placeholder":"说点什么","path":"window.location.pathname","avatar":"retro","meta":["nick","mail","link"],"pageSize":10,"lang":"zh-CN","highlight":false,"recordIP":false,"serverURLs":"","emojiCDN":null,"emojiMaps":null,"enableQQ":false,"requiredFields":[]},
+          {
+            el: "#valine",
+            path: window.location.pathname
+          }
+        )
+        new Valine(options);
+      });
+    });
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+  </div>
+  
+  <div class="statistics">
+    
+    
+
+    
+      
+        <!-- 不蒜子统计PV -->
+        <span id="busuanzi_container_site_pv" style="display: none">
+            总访问量 
+            <span id="busuanzi_value_site_pv"></span>
+             次
+          </span>
+      
+      
+        <!-- 不蒜子统计UV -->
+        <span id="busuanzi_container_site_uv" style="display: none">
+            总访客数 
+            <span id="busuanzi_value_site_uv"></span>
+             人
+          </span>
+      
+    
+  </div>
+
+
+  
+
+  
+</footer>
+
+
+  <!-- SCRIPTS -->
+  
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/tocbot@4.12.3/dist/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4.3.1/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js" ></script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+</body>
+</html>

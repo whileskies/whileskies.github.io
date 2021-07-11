@@ -1,0 +1,563 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="whileskies">
+  <meta name="keywords" content="">
+  
+  <title>6.S081-Lab9: file system - Hexo</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10.7.2/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"whileskies.xyz","root":"/","version":"1.8.11","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}},"search_path":"/local-search.xml"};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>whileskies</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/img/bg.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.2)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="6.S081-Lab9: file system">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2021-07-11 19:44" pubdate>
+        2021年7月11日 晚上
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      1.9k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      26
+       分钟
+    </span>
+  
+
+  
+  
+    
+      <!-- 不蒜子统计文章PV -->
+      <span id="busuanzi_container_page_pv" style="display: none">
+        <i class="iconfont icon-eye" aria-hidden="true"></i>
+        <span id="busuanzi_value_page_pv"></span> 次
+      </span>
+    
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">6.S081-Lab9: file system</h1>
+            
+            <div class="markdown-body">
+              <h2 id="Lab9-file-system"><a href="#Lab9-file-system" class="headerlink" title="Lab9: file system"></a>Lab9: file system</h2><p>lab9是为xv6文件系统增加支持大文件的功能以及软链接功能。</p>
+<h4 id="Large-files"><a href="#Large-files" class="headerlink" title="Large files"></a>Large files</h4><h5 id="任务"><a href="#任务" class="headerlink" title="任务"></a>任务</h5><p>当前的xv6文件被限制在268个块内， 每一块1024字节，这个限制由于xv6的inode结点包含12个直接块号，一个单一的间接块号，间接块号可以存储256个数据块块号，因此总共是12 + 256 = 268块。</p>
+<p>该部分需要增加xv6文件的最大大小，通过为xv6引入二级间接块号来增加文件大小最大值，二级间接块号包括256个一级间接块号，每个一级间接块号又可以存储256个数据块块号，因此最大文件可以达到65803 块（256 * 256 + 256 + 11块，牺牲了一个直接块号作为二级间接块号地址）。</p>
+<h5 id="过程"><a href="#过程" class="headerlink" title="过程"></a>过程</h5><ol>
+<li>修改inode结构</li>
+</ol>
+<p>由于需要引入二级间接块号，需要牺牲一个直接块号，因此需要修改inode的结构以修改布局，修改后inode有11个直接块号、1个一级间接块号地址、1个二级间接块号地址，代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// fs.h</span><br><span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> NDIRECT 11</span><br><span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> DINDIRECTI (NDIRECT + 1)</span><br><span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> NINDIRECT (BSIZE / sizeof(uint))</span><br><span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> MAXFILE (NDIRECT + NINDIRECT + NINDIRECT * NINDIRECT</span><br><br><span class="hljs-comment">// file.h</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">inode</span> &#123;</span><br>  uint dev;           <span class="hljs-comment">// Device number</span><br>  uint inum;          <span class="hljs-comment">// Inode number</span><br>  <span class="hljs-keyword">int</span> ref;            <span class="hljs-comment">// Reference count</span><br>  <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">sleeplock</span> <span class="hljs-title">lock</span>;</span> <span class="hljs-comment">// protects everything below here</span><br>  <span class="hljs-keyword">int</span> valid;          <span class="hljs-comment">// inode has been read from disk?</span><br><br>  <span class="hljs-keyword">short</span> type;         <span class="hljs-comment">// copy of disk inode</span><br>  <span class="hljs-keyword">short</span> major;<br>  <span class="hljs-keyword">short</span> minor;<br>  <span class="hljs-keyword">short</span> nlink;<br>  uint size;<br>  uint addrs[NDIRECT+<span class="hljs-number">2</span>];<br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>修改<code>fs.c/bmap()</code></li>
+</ol>
+<p><code>bmap()</code>函数将文件内块号映射为磁盘块号，如果不存在则会为其从bitmap寻找一空闲数据块，并将寻找到的数据块号添加到inode中，建立相应的映射。</p>
+<p>如果文件内块号位于一级间接块号的范围内，则应该先根据一级间接块号地址找到存放一级间接块号的数据块，如果不存在则分配，再根据一级间接块号中的块号地址，找到具体的数据块，如果不存在则分配。</p>
+<p>二级间接块号也是类似的，只不过多了一层查找过程，修改后的inode结构如下图所示：</p>
+<img src="https://whileskies-pic.oss-cn-beijing.aliyuncs.com/20210630153348.png" srcset="/img/loading.gif" lazyload alt="image-20210630153348525" style="zoom: 67%;" />
+
+<p>代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-function"><span class="hljs-keyword">static</span> uint</span><br><span class="hljs-function"><span class="hljs-title">bmap</span><span class="hljs-params">(struct inode *ip, uint bn)</span></span><br><span class="hljs-function"></span>&#123;<br>  uint addr, addr2, *a, *a2;<br>  <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">buf</span> *<span class="hljs-title">bp</span>, *<span class="hljs-title">bp2</span>;</span><br><br>  <span class="hljs-keyword">if</span>(bn &lt; NDIRECT)&#123;<br>    <span class="hljs-keyword">if</span>((addr = ip-&gt;addrs[bn]) == <span class="hljs-number">0</span>)<br>      ip-&gt;addrs[bn] = addr = balloc(ip-&gt;dev);<br>    <span class="hljs-keyword">return</span> addr;<br>  &#125;<br>  bn -= NDIRECT;<br><br>  <span class="hljs-keyword">if</span>(bn &lt; NINDIRECT)&#123;<br>    <span class="hljs-comment">// Load indirect block, allocating if necessary.</span><br>    <span class="hljs-keyword">if</span>((addr = ip-&gt;addrs[NDIRECT]) == <span class="hljs-number">0</span>)<br>      ip-&gt;addrs[NDIRECT] = addr = balloc(ip-&gt;dev);<br>    bp = bread(ip-&gt;dev, addr);<br>    a = (uint*)bp-&gt;data;<br>    <span class="hljs-keyword">if</span>((addr = a[bn]) == <span class="hljs-number">0</span>)&#123;<br>      a[bn] = addr = balloc(ip-&gt;dev);<br>      log_write(bp);<br>    &#125;<br>    brelse(bp);<br>    <span class="hljs-keyword">return</span> addr;<br>  &#125;<br>  <br>  bn -= NINDIRECT;<br><br>  <span class="hljs-keyword">if</span>(bn &lt; NINDIRECT * NINDIRECT)&#123;<br>    uint dbn = bn / NINDIRECT;<br>    uint dbnoff = bn % NINDIRECT;<br><br>    <span class="hljs-comment">// Load doubly-indirect block, allocating if necessary.</span><br>    <span class="hljs-keyword">if</span>((addr = ip-&gt;addrs[DINDIRECTI]) == <span class="hljs-number">0</span>)<br>      ip-&gt;addrs[DINDIRECTI] = addr = balloc(ip-&gt;dev);<br>    bp = bread(ip-&gt;dev, addr);<br>    <br>    a = (uint*)bp-&gt;data;<br>    <span class="hljs-keyword">if</span>((addr2 = a[dbn]) == <span class="hljs-number">0</span>)&#123;<br>      a[dbn] = addr2 = balloc(ip-&gt;dev);<br>      log_write(bp);<br>    &#125;<br>    brelse(bp);<br><br>    <span class="hljs-comment">//printf(&quot;addr2: %d\n&quot;, addr2);</span><br>    bp2 = bread(ip-&gt;dev, addr2);<br>    a2 = (uint*)bp2-&gt;data;<br>    <span class="hljs-keyword">if</span>((addr = a2[dbnoff]) == <span class="hljs-number">0</span>)&#123;<br>      a2[dbnoff] = addr = balloc(ip-&gt;dev);<br>      log_write(bp2);<br>    &#125;<br>    brelse(bp2);<br><br>    <span class="hljs-keyword">return</span> addr;<br>  &#125;<br><br>  panic(<span class="hljs-string">&quot;bmap: out of range&quot;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>修改<code>fs.c/itrunc()</code></li>
+</ol>
+<p>有增加映射就有删除映射，<code>itrunc()</code>用于删除整个文件内容，则需要查找inode，删除所占有的所有数据块，包括一级间接块、二级间接块，代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-function"><span class="hljs-keyword">void</span></span><br><span class="hljs-function"><span class="hljs-title">itrunc</span><span class="hljs-params">(struct inode *ip)</span></span><br><span class="hljs-function"></span>&#123;<br>  <span class="hljs-keyword">int</span> i, j;<br>  <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">buf</span> *<span class="hljs-title">bp</span>, *<span class="hljs-title">bp2</span>;</span><br>  uint *a, *a2;<br><br>  <span class="hljs-keyword">for</span>(i = <span class="hljs-number">0</span>; i &lt; NDIRECT; i++)&#123;<br>    <span class="hljs-keyword">if</span>(ip-&gt;addrs[i])&#123;<br>      bfree(ip-&gt;dev, ip-&gt;addrs[i]);<br>      ip-&gt;addrs[i] = <span class="hljs-number">0</span>;<br>    &#125;<br>  &#125;<br><br>  <span class="hljs-keyword">if</span>(ip-&gt;addrs[NDIRECT])&#123;<br>    bp = bread(ip-&gt;dev, ip-&gt;addrs[NDIRECT]);<br>    a = (uint*)bp-&gt;data;<br>    <span class="hljs-keyword">for</span>(j = <span class="hljs-number">0</span>; j &lt; NINDIRECT; j++)&#123;<br>      <span class="hljs-keyword">if</span>(a[j])<br>        bfree(ip-&gt;dev, a[j]);<br>    &#125;<br>    brelse(bp);<br>    bfree(ip-&gt;dev, ip-&gt;addrs[NDIRECT]);<br>    ip-&gt;addrs[NDIRECT] = <span class="hljs-number">0</span>;<br>  &#125;<br><br>  <span class="hljs-keyword">if</span>(ip-&gt;addrs[DINDIRECTI])&#123;<br>    bp = bread(ip-&gt;dev, ip-&gt;addrs[DINDIRECTI]);<br>    a = (uint*)bp-&gt;data;<br>    <span class="hljs-keyword">for</span>(i = <span class="hljs-number">0</span>; i &lt; NINDIRECT; i++)&#123;<br>      <span class="hljs-keyword">if</span>(a[i])&#123;<br>        bp2 = bread(ip-&gt;dev, a[i]);<br>        a2 = (uint*)bp2-&gt;data;<br>        <span class="hljs-keyword">for</span>(j = <span class="hljs-number">0</span>; j &lt; NINDIRECT; j++)&#123;<br>          <span class="hljs-keyword">if</span>(a2[j])<br>            bfree(ip-&gt;dev, a2[j]);<br>        &#125;<br>        brelse(bp2);<br>        bfree(ip-&gt;dev, a[i]);<br>      &#125;<br>    &#125;<br>    brelse(bp);<br>    bfree(ip-&gt;dev, ip-&gt;addrs[DINDIRECTI]);<br>    ip-&gt;addrs[DINDIRECTI] = <span class="hljs-number">0</span>;<br>  &#125;<br><br>  ip-&gt;size = <span class="hljs-number">0</span>;<br>  iupdate(ip);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>修改<code>file.c/filewrite()</code></li>
+</ol>
+<p>xv6为了维持文件系统的一致性，对于文件系统的调用都将被作为一个事务来完成，由于日志大小限制，一个事务同时更新的数据块数量也受到了限制，对于大文件的写来说，将被切分成多次写，每次写几个数据块作为一个事务进行提交。</p>
+<p>对于文件的一次写，可能需要为其分配数据块，那么存储间接块号的数据块、inode数据块都需要更新，每个事务实际使用的数据块数量应该考虑到同时更新的这些数据块；而由于添加了二级间接块号的数据块，那么同时又可能需要更新二级间接块号的数据块，因此最终每个事务使用的最大数据块又应该从每个事务的日志最大块数 -1。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">int</span> max = ((MAXOPBLOCKS<span class="hljs-number">-1</span><span class="hljs-number">-2</span><span class="hljs-number">-2</span>) / <span class="hljs-number">2</span>) * BSIZE;<br></code></pre></td></tr></table></figure>
+
+<h4 id="Symbolic-links"><a href="#Symbolic-links" class="headerlink" title="Symbolic links"></a>Symbolic links</h4><h5 id="任务-1"><a href="#任务-1" class="headerlink" title="任务"></a>任务</h5><p>该部分为xv6增加符号链接（软链接），符号链接通过文件路径链接另一个文件；当一个符号链接打开时，内核打开实际链接到的文件。符号链接像硬链接，但是硬链接被限制指向同一个磁盘上，符号链接可以在不同的磁盘设备上。</p>
+<h5 id="过程-1"><a href="#过程-1" class="headerlink" title="过程"></a>过程</h5><ol>
+<li>增加系统调用</li>
+</ol>
+<p>按照之前Lab添加系统调用的方式添加<code>symlink</code>系统调用。</p>
+<ol start="2">
+<li>增加符号链接文件类型</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// stat.h</span><br><span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> T_DIR     1   <span class="hljs-comment">// Directory</span></span><br><span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> T_FILE    2   <span class="hljs-comment">// File</span></span><br><span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> T_DEVICE  3   <span class="hljs-comment">// Device</span></span><br><span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> T_SYMLINK 4   <span class="hljs-comment">// Symbolic link</span></span><br><br><span class="hljs-comment">// fcntl.h </span><br><span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> O_RDWR    0x002</span><br><span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> O_CREATE  0x200</span><br><span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> O_TRUNC   0x400</span><br><span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> O_NOFOLLOW 0x800 </span><br></code></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>创建<code>sysfile.c/sys_symlink()</code>系统调用函数</li>
+</ol>
+<p>符号链接是一个特殊的文件，文件类型为T_SYMLINK，该文件只需要存储另一个文件的路径即可，因此首先先创建一个符号链接文件，再将所链接文件路径写到符号链接文件中即可。代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-function">uint64</span><br><span class="hljs-function"><span class="hljs-title">sys_symlink</span><span class="hljs-params">(<span class="hljs-keyword">void</span>)</span></span><br><span class="hljs-function"></span>&#123;<br>  <span class="hljs-keyword">char</span> <span class="hljs-keyword">new</span>[MAXPATH], old[MAXPATH];<br>  <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">inode</span> *<span class="hljs-title">op</span>, *<span class="hljs-title">ip</span>;</span><br><br>  <span class="hljs-keyword">if</span>(argstr(<span class="hljs-number">0</span>, old, MAXPATH) &lt; <span class="hljs-number">0</span> || argstr(<span class="hljs-number">1</span>, <span class="hljs-keyword">new</span>, MAXPATH) &lt; <span class="hljs-number">0</span>)<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br><br>  begin_op();<br>  <span class="hljs-keyword">if</span>((op = namei(old)) != <span class="hljs-number">0</span>)&#123;<br>    ilock(op);<br>    <span class="hljs-keyword">if</span>(op-&gt;type == T_DIR)&#123;<br>      iunlockput(op);<br>      end_op();<br>      <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>    &#125;<br>    iunlockput(op);<br>  &#125;<br><br>  <span class="hljs-keyword">if</span>((ip = create(<span class="hljs-keyword">new</span>, T_SYMLINK, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>)) == <span class="hljs-number">0</span>)&#123;<br>    end_op();<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>  &#125;<br><br>  uint len = <span class="hljs-built_in">strlen</span>(old) + <span class="hljs-number">1</span>;<br>  <span class="hljs-keyword">if</span>(writei(ip, <span class="hljs-number">0</span>, (uint64)old, <span class="hljs-number">0</span>, len) != len)&#123;<br>    iunlockput(ip);<br>    end_op();<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>  &#125;<br><br>  iupdate(ip);<br>  iunlockput(ip);<br>  end_op();<br><br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>修改<code>sysfile.c/sys_open()</code>增加链接文件打开方式</li>
+</ol>
+<p>进程使用<code>open()</code>系统调用打开符号链接文件时，可以有两种打开方式：</p>
+<ul>
+<li>打开模式为<code>O_NOFOLLOW</code>时，直接打开符号链接文件的内容，也即另一个文件的文件路径，直接按照一般文件打开即可</li>
+<li>打开模式不加<code>O_NOFOLLOW</code>时，则打开所链接的文件，如果所链接的文件又是一个链接文件，这应该递归地去找到真正的文件</li>
+</ul>
+<p><code>sys_open()</code>函数修改如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">if</span>(omode &amp; O_NOFOLLOW)&#123;<br>  <span class="hljs-keyword">if</span>((ip = namei(path)) == <span class="hljs-number">0</span>)&#123;<br>    end_op();<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>  &#125;<br>&#125; <span class="hljs-keyword">else</span>&#123;<br>  <span class="hljs-keyword">char</span> rpath[MAXPATH];<br>  <span class="hljs-keyword">if</span>((ip = find_symlink(path, rpath, <span class="hljs-number">0</span>)) == <span class="hljs-number">0</span>)&#123;<br>    end_op();<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><code>find_symlink()</code>函数递归找到真正的文件，如果递归层数过多，则停止：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-function">struct inode*</span><br><span class="hljs-function"><span class="hljs-title">find_symlink</span><span class="hljs-params">(<span class="hljs-keyword">char</span> *path, <span class="hljs-keyword">char</span> *rpath, <span class="hljs-keyword">int</span> depth)</span></span><br><span class="hljs-function"></span>&#123;<br>  <span class="hljs-keyword">if</span>(depth &gt;= <span class="hljs-number">10</span>)<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br><br>  <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">inode</span> *<span class="hljs-title">ip</span>;</span><br>  <span class="hljs-keyword">if</span>((ip = namei(path)) != <span class="hljs-number">0</span>)&#123;<br>    ilock(ip);<br><br>    <span class="hljs-keyword">if</span>(ip-&gt;type != T_SYMLINK)&#123;<br>      iunlock(ip);<br>      <span class="hljs-keyword">return</span> ip;<br>    &#125;<br><br>    <span class="hljs-keyword">if</span>(readi(ip, <span class="hljs-number">0</span>, (uint64)rpath, <span class="hljs-number">0</span>, ip-&gt;size) == <span class="hljs-number">0</span>)&#123;<br>      iunlockput(ip);<br>      <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>    &#125;<br><br>    iunlockput(ip);<br>  <br>    <span class="hljs-keyword">return</span> find_symlink(rpath, rpath, depth + <span class="hljs-number">1</span>);<br>  &#125;<br><br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h4 id="实验测试"><a href="#实验测试" class="headerlink" title="实验测试"></a>实验测试</h4><p><img src="https://whileskies-pic.oss-cn-beijing.aliyuncs.com/20210630161137.png" srcset="/img/loading.gif" lazyload alt="test2"></p>
+<h4 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h4><p><a target="_blank" rel="noopener" href="https://github.com/whileskies/xv6-labs-2020/tree/fs">https://github.com/whileskies/xv6-labs-2020/tree/fs</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/OS/">OS</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/6-S081/">6.S081</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2021/07/11/6-S081-Lab10-mmap/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">6.S081-Lab10: mmap</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2021/07/11/6-S081-Lab8-locks/">
+                        <span class="hidden-mobile">6.S081-Lab8: locks</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments" lazyload>
+                
+                  
+                
+                
+  <div id="valine"></div>
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#valine', function() {
+      Fluid.utils.createScript('https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js', function() {
+        var options = Object.assign(
+          {"appId":"9g01Ua9Sd4wyOYTwdnQxmFD8-gzGzoHsz","appKey":"l6mxYxD3DKx9h1kk0Cm6233n","placeholder":"说点什么","path":"window.location.pathname","avatar":"retro","meta":["nick","mail","link"],"pageSize":10,"lang":"zh-CN","highlight":false,"recordIP":false,"serverURLs":"","emojiCDN":null,"emojiMaps":null,"enableQQ":false,"requiredFields":[]},
+          {
+            el: "#valine",
+            path: window.location.pathname
+          }
+        )
+        new Valine(options);
+      });
+    });
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+  </div>
+  
+  <div class="statistics">
+    
+    
+
+    
+      
+        <!-- 不蒜子统计PV -->
+        <span id="busuanzi_container_site_pv" style="display: none">
+            总访问量 
+            <span id="busuanzi_value_site_pv"></span>
+             次
+          </span>
+      
+      
+        <!-- 不蒜子统计UV -->
+        <span id="busuanzi_container_site_uv" style="display: none">
+            总访客数 
+            <span id="busuanzi_value_site_uv"></span>
+             人
+          </span>
+      
+    
+  </div>
+
+
+  
+
+  
+</footer>
+
+
+  <!-- SCRIPTS -->
+  
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/tocbot@4.12.3/dist/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4.3.1/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js" ></script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+</body>
+</html>

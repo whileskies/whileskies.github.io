@@ -1,0 +1,558 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="whileskies">
+  <meta name="keywords" content="">
+  
+  <title>6.S081-Lab5: xv6 lazy page allocation - Hexo</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10.7.2/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"whileskies.xyz","root":"/","version":"1.8.11","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}},"search_path":"/local-search.xml"};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>whileskies</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/img/bg.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.2)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="6.S081-Lab5: xv6 lazy page allocation">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2021-07-11 19:44" pubdate>
+        2021年7月11日 晚上
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      1.8k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      24
+       分钟
+    </span>
+  
+
+  
+  
+    
+      <!-- 不蒜子统计文章PV -->
+      <span id="busuanzi_container_page_pv" style="display: none">
+        <i class="iconfont icon-eye" aria-hidden="true"></i>
+        <span id="busuanzi_value_page_pv"></span> 次
+      </span>
+    
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">6.S081-Lab5: xv6 lazy page allocation</h1>
+            
+            <div class="markdown-body">
+              <h2 id="Lab5-xv6-lazy-page-allocation"><a href="#Lab5-xv6-lazy-page-allocation" class="headerlink" title="Lab5: xv6 lazy page allocation"></a>Lab5: xv6 lazy page allocation</h2><p>lab5主要是为sbrk()系统调用实现懒分配</p>
+<p>os可以使用页表实现很多技巧，其中一个是对于用户空间堆内存的懒分配，xv6应用程序使用sbrk()系统调用来向内核申请堆内存；在未修改版本的xv6中，sbrk()分配物理页，并将其映射到进程的虚拟地址空间，对一个大的堆内存申请需求，内核需要一段时间去分配并且映射到页表；另外，一些程序会申请比实际使用更多的内存，或者在使用前去分配内存；为了使得sbrk()在这些情况下更快完成，更为复杂的内核实现懒分配；这时，sbrk()不实际分配物理内存，而是记录哪些用户地址被分配，并且在用户页表标记这些地址是非法的；当进程首次尝试访问懒分配的内存中任何一页时，CPU会产生页错误，内核处理该错误，为其分配物理内存，填充0，并且进行映射；在该lab中为xv6添加该特性</p>
+<h4 id="Eliminate-allocation-from-sbrk-easy"><a href="#Eliminate-allocation-from-sbrk-easy" class="headerlink" title="Eliminate allocation from sbrk() (easy)"></a>Eliminate allocation from sbrk() (easy)</h4><h5 id="任务"><a href="#任务" class="headerlink" title="任务"></a>任务</h5><p>完成lazy alloc首先需要在sbrk(n)系统调用实现中删除物理页分配代码，sbrk(n)系统调用增长进程n个字节的内存大小，返回新分配区域的首地址；新的sbrk(n)应该仅仅增加进程n个字节的内存大小，并返回之前的内存边界；由于不分配物理内存，所以需要删除growproc()函数</p>
+<h5 id="过程"><a href="#过程" class="headerlink" title="过程"></a>过程</h5><p>修改<code>sysproc.c/sys_sbrk</code>的实现，仅仅修改进程的sz的值，而不实际分配物理页，代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-function">uint64</span><br><span class="hljs-function"><span class="hljs-title">sys_sbrk</span><span class="hljs-params">(<span class="hljs-keyword">void</span>)</span></span><br><span class="hljs-function"></span>&#123;<br>  <span class="hljs-keyword">int</span> addr;<br>  <span class="hljs-keyword">int</span> n;<br><br>  <span class="hljs-keyword">if</span>(argint(<span class="hljs-number">0</span>, &amp;n) &lt; <span class="hljs-number">0</span>)<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>  <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">proc</span>* <span class="hljs-title">p</span> =</span> myproc();<br>  addr = p-&gt;sz;<br>  <br>  <span class="hljs-keyword">if</span>(n &lt; <span class="hljs-number">0</span>) &#123;<br>    uvmdealloc(p-&gt;pagetable, p-&gt;sz, p-&gt;sz + n);<br>  &#125;<br>  p-&gt;sz += n;<br>  <br>  <span class="hljs-keyword">return</span> addr;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h4 id="Lazy-allocation-moderate"><a href="#Lazy-allocation-moderate" class="headerlink" title="Lazy allocation (moderate)"></a>Lazy allocation (moderate)</h4><h5 id="任务-1"><a href="#任务-1" class="headerlink" title="任务"></a>任务</h5><p>修改<code>trap.c</code>中的代码使得当用户地址发生页错误时，为页错误地址分配新的物理页，并进行映射</p>
+<h5 id="过程-1"><a href="#过程-1" class="headerlink" title="过程"></a>过程</h5><ol>
+<li>创建<code>vm.c/lazy_alloc</code>函数</li>
+</ol>
+<p><code>lazy_alloc</code>函数根据出现页错误时的进程虚拟地址，为该进程分配物理页并进行映射</p>
+<p>如果进程访问的虚拟地址超出进程内存大小（堆空间）边界或低于栈顶地址时，杀掉此进程</p>
+<p>当分配物理页失败或映射物理页到用户页表失败时，同样杀掉此进程</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// Lazy alloc for sbrk</span><br><span class="hljs-function"><span class="hljs-keyword">int</span></span><br><span class="hljs-function"><span class="hljs-title">lazy_alloc</span><span class="hljs-params">(uint64 stval, struct proc *p)</span></span><br><span class="hljs-function"></span>&#123;<br>  uint64 va = PGROUNDDOWN(stval);<br>  <span class="hljs-keyword">if</span>(stval &gt;= p-&gt;sz || stval &lt; PGROUNDDOWN(p-&gt;trapframe-&gt;sp)) &#123;<br>    <span class="hljs-comment">//printf(&quot;lazy alloc error: va higher than sz or below user stack\n&quot;);</span><br>    p-&gt;killed = <span class="hljs-number">1</span>;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>  &#125;<br><br>  <span class="hljs-keyword">char</span> *mem = kalloc();<br>  <span class="hljs-keyword">if</span>(mem == <span class="hljs-number">0</span>)&#123;<br>    <span class="hljs-comment">//printf(&quot;lazy alloc error: no more memory\n&quot;);</span><br>    p-&gt;killed = <span class="hljs-number">1</span>;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>  &#125;<br><br>  <span class="hljs-built_in">memset</span>(mem, <span class="hljs-number">0</span>, PGSIZE);<br>  <span class="hljs-keyword">if</span>(mappages(p-&gt;pagetable, va, PGSIZE, (uint64)mem, PTE_W|PTE_R|PTE_U) != <span class="hljs-number">0</span>)&#123;<br>    kfree(mem);<br>    <span class="hljs-comment">//printf(&quot;lazy alloc error: map error\n&quot;);</span><br>    p-&gt;killed = <span class="hljs-number">1</span>;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>  &#125;<br><br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>处理页错误陷入</li>
+</ol>
+<p>当用户进程访问到某个堆空间处的虚拟地址，由于是懒分配，实际上并没有分配相应的物理页，cpu产生缺页中断，产生页错误陷入到内核后，应调用<code>lazy_alloc</code>为其分配物理页后，重新访问该地址</p>
+<p>陷入的原因状态码被保存在<code>scause</code>寄存器中，13代表Load page fault、15代表Store page fault，因此当<code>scause</code>为13或15时，也即进程正在读取或写入虚拟地址时，实现懒分配并恢复访问</p>
+<p>代码如下所示：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c">&#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>((which_dev = devintr()) != <span class="hljs-number">0</span>)&#123;<br>  <span class="hljs-comment">// ok</span><br>&#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (r_scause() == <span class="hljs-number">13</span> || r_scause() == <span class="hljs-number">15</span>) &#123;<br>  <span class="hljs-comment">// lazy allocation</span><br>  <span class="hljs-comment">// printf(&quot;page fault: stval=%p pid=%d\n&quot;, r_stval(), p-&gt;pid);</span><br>  uint64 stval = r_stval();<br>  lazy_alloc(stval, p);<br>&#125; <span class="hljs-keyword">else</span> &#123;<br></code></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>修改<code>vm.c/uvmunmap</code>函数</li>
+</ol>
+<p>由于是懒分配，当进程需要被释放，取消映射的页表时，有的物理页实际并不存在，因此需要修改取消映射的规则，当物理页不存在时略过</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">for</span>(a = va; a &lt; va + npages*PGSIZE; a += PGSIZE)&#123;<br>  <span class="hljs-keyword">if</span>((pte = walk(pagetable, a, <span class="hljs-number">0</span>)) == <span class="hljs-number">0</span>)<br>    <span class="hljs-keyword">continue</span>;<br>    <span class="hljs-comment">//panic(&quot;uvmunmap: walk&quot;);</span><br>  <span class="hljs-keyword">if</span>((*pte &amp; PTE_V) == <span class="hljs-number">0</span>)<br>    <span class="hljs-comment">//panic(&quot;uvmunmap: not mapped&quot;);</span><br>    <span class="hljs-keyword">continue</span>;<br>  <span class="hljs-keyword">if</span>(PTE_FLAGS(*pte) == PTE_V)<br>    panic(<span class="hljs-string">&quot;uvmunmap: not a leaf&quot;</span>);<br>  <span class="hljs-keyword">if</span>(do_free)&#123;<br>    uint64 pa = PTE2PA(*pte);<br>    kfree((<span class="hljs-keyword">void</span>*)pa);<br>  &#125;<br>  *pte = <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+<h4 id="Lazytests-and-Usertests-moderate"><a href="#Lazytests-and-Usertests-moderate" class="headerlink" title="Lazytests and Usertests (moderate)"></a>Lazytests and Usertests (moderate)</h4><h5 id="任务-2"><a href="#任务-2" class="headerlink" title="任务"></a>任务</h5><p>使得将内核修改为lazy alloc后能够通过<code>lazytests</code>和<code>usertests</code></p>
+<h5 id="过程-2"><a href="#过程-2" class="headerlink" title="过程"></a>过程</h5><ol>
+<li>修改<code>vm.c/uvmcopy</code></li>
+</ol>
+<p>由于<code>fork</code>系统调用需要复制父进程的地址空间到子进程，父进程的一些地址空间的物理页并没有被分配，因此复制时应跳过不存在的物理页，不进行复制</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">if</span>((pte = walk(old, i, <span class="hljs-number">0</span>)) == <span class="hljs-number">0</span>)<br>  <span class="hljs-keyword">continue</span>;<br>  <span class="hljs-comment">//panic(&quot;uvmcopy: pte should exist&quot;);</span><br><span class="hljs-keyword">if</span>((*pte &amp; PTE_V) == <span class="hljs-number">0</span>)<br>  <span class="hljs-keyword">continue</span>;<br>  <span class="hljs-comment">//panic(&quot;uvmcopy: page not present&quot;);</span><br>pa = PTE2PA(*pte);<br>flags = PTE_FLAGS(*pte);<br></code></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>处理当进程调用如<code>read</code>、<code>write</code>系统调用时传递合法的虚拟地址参数，但该地址实际的物理页未分配的情况</li>
+</ol>
+<p><code>read</code>系统调用需要传递一个用户的虚拟地址指针，内核将文件数据复制到该用户指针指向的虚拟地址处，该地址如果是堆内存空间的地址，当所对应的物理页并没有分配时，会在<code>read</code>系统调用过程中出现错误，但不同于用户进程访问未分配内存的地址时出现的页错误；该错误应在<code>read</code>中处理，提前判断进程传进的用户指针参数所对应的物理页是否存在，如果不存在则分配；<code>write</code>、<code>pipe</code>系统调用也是类似的</p>
+<p>当用户指针参数<code>p</code>不合法时，应对<code>read</code>返回表示错误的返回值，而不是杀掉该进程，因此应修改上述的<code>vm.c/lazy_alloc</code>代码为<code>vm.c/lazy_wr_alloc</code>：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// Lazy alloc for write read and pipe</span><br><span class="hljs-function"><span class="hljs-keyword">int</span></span><br><span class="hljs-function"><span class="hljs-title">lazy_wr_alloc</span><span class="hljs-params">(uint64 va, struct proc *p)</span></span><br><span class="hljs-function"></span>&#123;<br>  <span class="hljs-keyword">if</span>(va &gt;= p-&gt;sz || va &lt; PGROUNDDOWN(p-&gt;trapframe-&gt;sp)) &#123;<br>    <span class="hljs-comment">//printf(&quot;lazy wr alloc error: va higher than sz\n&quot;);</span><br>    <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>  &#125;<br><br>  <span class="hljs-keyword">char</span> *mem = kalloc();<br>  <span class="hljs-keyword">if</span>(mem == <span class="hljs-number">0</span>)&#123;<br>    <span class="hljs-comment">//printf(&quot;lazy wr alloc error: no more memory\n&quot;);</span><br>    p-&gt;killed = <span class="hljs-number">1</span>;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>  &#125;<br><br>  <span class="hljs-built_in">memset</span>(mem, <span class="hljs-number">0</span>, PGSIZE);<br>  <span class="hljs-keyword">if</span>(mappages(p-&gt;pagetable, va, PGSIZE, (uint64)mem, PTE_W|PTE_R|PTE_U) != <span class="hljs-number">0</span>)&#123;<br>    kfree(mem);<br>    <span class="hljs-comment">//printf(&quot;lazy wr alloc error: map error\n&quot;);</span><br>    p-&gt;killed = <span class="hljs-number">1</span>;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>  &#125;<br><br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><code>sysfile.c/sys_read</code>修改如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-function">uint64</span><br><span class="hljs-function"><span class="hljs-title">sys_read</span><span class="hljs-params">(<span class="hljs-keyword">void</span>)</span></span><br><span class="hljs-function"></span>&#123;<br>  <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">file</span> *<span class="hljs-title">f</span>;</span><br>  <span class="hljs-keyword">int</span> n;<br>  uint64 p;<br><br>  <span class="hljs-keyword">if</span>(argfd(<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, &amp;f) &lt; <span class="hljs-number">0</span> || argint(<span class="hljs-number">2</span>, &amp;n) &lt; <span class="hljs-number">0</span> || argaddr(<span class="hljs-number">1</span>, &amp;p) &lt; <span class="hljs-number">0</span>)<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br><br>  <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">proc</span> *<span class="hljs-title">pro</span> =</span> myproc();<br>  <span class="hljs-keyword">for</span>(uint64 va = PGROUNDDOWN(p); va &lt; p + n; va += PGSIZE) &#123;<br>    <span class="hljs-keyword">if</span>(walkaddr(pro-&gt;pagetable, va) == <span class="hljs-number">0</span>) &#123;<br>      <span class="hljs-keyword">if</span>(lazy_wr_alloc(va, pro) &lt; <span class="hljs-number">0</span>)<br>        <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>    &#125;<br>  &#125;<br><br>  <span class="hljs-keyword">return</span> fileread(f, p, n);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><code>sysfile.c/sys_write</code>修改如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-function">uint64</span><br><span class="hljs-function"><span class="hljs-title">sys_write</span><span class="hljs-params">(<span class="hljs-keyword">void</span>)</span></span><br><span class="hljs-function"></span>&#123;<br>  <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">file</span> *<span class="hljs-title">f</span>;</span><br>  <span class="hljs-keyword">int</span> n;<br>  uint64 p;<br><br>  <span class="hljs-keyword">if</span>(argfd(<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, &amp;f) &lt; <span class="hljs-number">0</span> || argint(<span class="hljs-number">2</span>, &amp;n) &lt; <span class="hljs-number">0</span> || argaddr(<span class="hljs-number">1</span>, &amp;p) &lt; <span class="hljs-number">0</span>)<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>  <br>  <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">proc</span> *<span class="hljs-title">pro</span> =</span> myproc();<br>  <span class="hljs-keyword">for</span>(uint64 va = PGROUNDDOWN(p); va &lt; p + n; va += PGSIZE) &#123;<br>    <span class="hljs-keyword">if</span>(walkaddr(pro-&gt;pagetable, va) == <span class="hljs-number">0</span>) &#123;<br>      <span class="hljs-keyword">if</span>(lazy_wr_alloc(va, pro) &lt; <span class="hljs-number">0</span>)<br>        <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>    &#125;<br>  &#125;<br><br>  <span class="hljs-keyword">return</span> filewrite(f, p, n);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><code>sysfile.c/sys_pipe</code>修改如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">if</span>(argaddr(<span class="hljs-number">0</span>, &amp;fdarray) &lt; <span class="hljs-number">0</span>)<br>  <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br><br><span class="hljs-keyword">for</span>(uint64 va = PGROUNDDOWN(fdarray); va &lt; PGROUNDUP(fdarray + <span class="hljs-number">2</span>*<span class="hljs-keyword">sizeof</span>(fd0)); va += PGSIZE) &#123;<br>  <span class="hljs-keyword">if</span>(walkaddr(p-&gt;pagetable, va) == <span class="hljs-number">0</span>) &#123;<br>    <span class="hljs-keyword">if</span>(lazy_wr_alloc(va, p) &lt; <span class="hljs-number">0</span>)<br>      <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>  &#125;<br>&#125;<br><br><span class="hljs-keyword">if</span>(pipealloc(&amp;rf, &amp;wf) &lt; <span class="hljs-number">0</span>)<br>  <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br></code></pre></td></tr></table></figure>
+
+<h5 id="运行结果"><a href="#运行结果" class="headerlink" title="运行结果"></a>运行结果</h5><p>lazytests:</p>
+<p><img src="https://whileskies-pic.oss-cn-beijing.aliyuncs.com/20210410160218.png" srcset="/img/loading.gif" lazyload alt="image-20210410160211604"></p>
+<p>usertests:</p>
+<p><img src="https://whileskies-pic.oss-cn-beijing.aliyuncs.com/20210410164834.png" srcset="/img/loading.gif" lazyload alt="image-20210410164834879"></p>
+<h4 id="实验测试"><a href="#实验测试" class="headerlink" title="实验测试"></a>实验测试</h4><p><img src="https://whileskies-pic.oss-cn-beijing.aliyuncs.com/20210410164038.png" srcset="/img/loading.gif" lazyload alt="image-20210410164038207"></p>
+<h4 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h4><p><a target="_blank" rel="noopener" href="https://github.com/whileskies/xv6-labs-2020/tree/lazy">https://github.com/whileskies/xv6-labs-2020/tree/lazy</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/OS/">OS</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/6-S081/">6.S081</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2021/07/11/6-S081-Lab6-Copy-on-Write-Fork-for-xv6/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">6.S081-Lab6: Copy-on-Write Fork for xv6</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2021/07/11/6-S081-Lab4-traps/">
+                        <span class="hidden-mobile">6.S081-Lab4: traps</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments" lazyload>
+                
+                  
+                
+                
+  <div id="valine"></div>
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#valine', function() {
+      Fluid.utils.createScript('https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js', function() {
+        var options = Object.assign(
+          {"appId":"9g01Ua9Sd4wyOYTwdnQxmFD8-gzGzoHsz","appKey":"l6mxYxD3DKx9h1kk0Cm6233n","placeholder":"说点什么","path":"window.location.pathname","avatar":"retro","meta":["nick","mail","link"],"pageSize":10,"lang":"zh-CN","highlight":false,"recordIP":false,"serverURLs":"","emojiCDN":null,"emojiMaps":null,"enableQQ":false,"requiredFields":[]},
+          {
+            el: "#valine",
+            path: window.location.pathname
+          }
+        )
+        new Valine(options);
+      });
+    });
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+  </div>
+  
+  <div class="statistics">
+    
+    
+
+    
+      
+        <!-- 不蒜子统计PV -->
+        <span id="busuanzi_container_site_pv" style="display: none">
+            总访问量 
+            <span id="busuanzi_value_site_pv"></span>
+             次
+          </span>
+      
+      
+        <!-- 不蒜子统计UV -->
+        <span id="busuanzi_container_site_uv" style="display: none">
+            总访客数 
+            <span id="busuanzi_value_site_uv"></span>
+             人
+          </span>
+      
+    
+  </div>
+
+
+  
+
+  
+</footer>
+
+
+  <!-- SCRIPTS -->
+  
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/tocbot@4.12.3/dist/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4.3.1/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js" ></script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+</body>
+</html>

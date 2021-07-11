@@ -18,7 +18,7 @@
   <meta name="author" content="whileskies">
   <meta name="keywords" content="">
   
-  <title>Hello world - Hexo</title>
+  <title>6.S081-Lab11: networking - Hexo</title>
 
   <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" />
 
@@ -158,12 +158,12 @@
 </nav>
 
     <div class="banner" id="banner" parallax=true
-         style="background: url('/img/default.png') no-repeat center center;
+         style="background: url('/img/bg.jpg') no-repeat center center;
            background-size: cover;">
       <div class="full-bg-img">
-        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.2)">
           <div class="page-header text-center fade-in-up">
-            <span class="h2" id="subtitle" title="Hello world">
+            <span class="h2" id="subtitle" title="6.S081-Lab11: networking">
               
             </span>
 
@@ -173,8 +173,8 @@
   
     <span class="post-meta">
       <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-      <time datetime="2021-07-08 02:29" pubdate>
-        2021年7月8日 凌晨
+      <time datetime="2021-07-11 19:45" pubdate>
+        2021年7月11日 晚上
       </time>
     </span>
   
@@ -185,7 +185,7 @@
     
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      9 字
+      648 字
     </span>
   
 
@@ -195,7 +195,7 @@
       <i class="iconfont icon-clock-fill"></i>
       
       
-      1
+      8
        分钟
     </span>
   
@@ -233,20 +233,54 @@
         <div class="py-5" id="board">
           <article class="post-content mx-auto">
             <!-- SEO header -->
-            <h1 style="display: none">Hello world</h1>
+            <h1 style="display: none">6.S081-Lab11: networking</h1>
             
             <div class="markdown-body">
-              <p>测试网站</p>
-<p>hhhhh</p>
-<p>😁😁😁</p>
-<p>😀😀😀</p>
-<p>hexo client测试</p>
+              <h2 id="Lab11-networking"><a href="#Lab11-networking" class="headerlink" title="Lab11: networking"></a>Lab11: networking</h2><p>Lab11为xv6编写网卡驱动，使得网络协议栈（IP、UDP、ARP）能够正常运行。</p>
+<h4 id="networking"><a href="#networking" class="headerlink" title="networking"></a>networking</h4><h5 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h5><ol>
+<li>实现<code>e1000_transmit()</code></li>
+</ol>
+<p><code>e1000_transmit()</code>函数接收一mbuf，mbuf包含了将要发送的以太网帧。由于网卡采用DMA传输数据，要发送数据帧，要告诉DMA控制器数据帧的起始内存地址和长度。因此内存中维护了<code>tx_ring</code>环形传送描述队列，网卡寄存器维护了<code>E1000_TDH</code>作为队列头指针，<code>E1000_TDT</code>作为队列尾指针，结构如下图所示：</p>
+<img src="https://whileskies-pic.oss-cn-beijing.aliyuncs.com/20210711171635.png" srcset="/img/loading.gif" lazyload alt="image-20210711171628026" style="zoom: 50%;" />
+
+<p>初始化时所有队列中的描述符状态均设为<code>E1000_TXD_STAT_DD</code>，根据提示，当tail的<code>E1000_TXD_STAT_DD</code>为0时，代表网卡还未取走该帧数据，则当前队列满了，返回错误。</p>
+<p>网卡每次会从head处取数据，取完数据将<code>E1000_TXD_STAT_DD</code>状态设为1，代表传送完成，但是只有在描述符拥有<code>E1000_TXD_CMD_RS</code>命令时才设置<code>E1000_TXD_STAT_DD</code>。</p>
+<p>此外以太网帧的MTU为1500，一个缓冲区的大小为2048，因此不需要进行帧的划分，因此每个传送数据的描述命令应加上<code>E1000_TXD_CMD_EOP</code>，代表数据包的结束。</p>
+<p>可能多个线程同时调用<code>e1000_transmit()</code>来传送数据，需要为其加锁互斥访问。</p>
+<p>代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-function"><span class="hljs-keyword">int</span></span><br><span class="hljs-function"><span class="hljs-title">e1000_transmit</span><span class="hljs-params">(struct mbuf *m)</span></span><br><span class="hljs-function"></span>&#123;<br>  acquire(&amp;e1000_lock);<br><br>  <span class="hljs-keyword">int</span> tail = regs[E1000_TDT];<br>  <span class="hljs-keyword">if</span>(!(tx_ring[tail].status &amp; E1000_TXD_STAT_DD))&#123;<br>    release(&amp;e1000_lock);<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>  &#125;<br>  <br>  <span class="hljs-keyword">if</span>(tx_mbufs[tail])<br>    mbuffree(tx_mbufs[tail]);<br>  <br>  <span class="hljs-built_in">memset</span>(&amp;tx_ring[tail], <span class="hljs-number">0</span>, <span class="hljs-keyword">sizeof</span>(struct tx_desc));<br>  tx_ring[tail].cmd = (E1000_TXD_CMD_EOP | E1000_TXD_CMD_RS);<br>  tx_ring[tail].addr = (uint64)m-&gt;head;<br>  tx_ring[tail].length = m-&gt;len;<br>  tx_mbufs[tail] = m;<br><br>  regs[E1000_TDT] = (tail + <span class="hljs-number">1</span>) % TX_RING_SIZE;<br>  <br>  release(&amp;e1000_lock);<br> <br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>实现实现<code>e1000_recv()</code></li>
+</ol>
+<p>网卡接收到数据并根据<code>rx_ring</code>环形接收描述队列将数据通过DMA传送到内存指定位置，设置<code>E1000_RXD_STAT_DD</code>标记，并产生中断，<code>e1000_recv()</code>被调用。</p>
+<p>该函数需要扫描<code>rx_ring</code>传递每一个接收到的包到网络协议栈，调用<code>net_rx()</code>函数传送，之后应该分配一个新的缓冲区替换到相应描述符中。</p>
+<p><code>e1000_transmit()</code>和<code>e1000_recv()</code>并不共享数据结构，相互独立，不会相互影响，因此可以为<code>e1000_recv()</code>单独加上另一把锁，防止在一个线程在<code>e1000_recv()</code>执行时，另外一个CPU产生了<code>e1000_intr</code>中断。</p>
+<p>代码如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">spinlock</span> <span class="hljs-title">e1000_lockrx</span>;</span><br><br><span class="hljs-comment">// e1000_init()</span><br>initlock(&amp;e1000_lockrx, <span class="hljs-string">&quot;e1000_rx&quot;</span>);<br><br><span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span></span><br><span class="hljs-function"><span class="hljs-title">e1000_recv</span><span class="hljs-params">(<span class="hljs-keyword">void</span>)</span></span><br><span class="hljs-function"></span>&#123;<br>  acquire(&amp;e1000_lockrx);<br><br>  <span class="hljs-keyword">int</span> i = (regs[E1000_RDT] + <span class="hljs-number">1</span>) % RX_RING_SIZE;<br>  <span class="hljs-keyword">while</span>(rx_ring[i].status &amp; E1000_RXD_STAT_DD)&#123;<br>    rx_mbufs[i]-&gt;len = rx_ring[i].length;<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">mbuf</span> *<span class="hljs-title">rb</span> =</span> rx_mbufs[i];<br><br>    rx_mbufs[i] = mbufalloc(<span class="hljs-number">0</span>);<br>    <span class="hljs-keyword">if</span> (!rx_mbufs[i])<br>      panic(<span class="hljs-string">&quot;e1000&quot;</span>);<br>    rx_ring[i].addr = (uint64) rx_mbufs[i]-&gt;head;<br>    rx_ring[i].status = <span class="hljs-number">0</span>;<br>    regs[E1000_RDT] = i;<br><br>    net_rx(rb);<br><br>    i = (regs[E1000_RDT] + <span class="hljs-number">1</span>) % RX_RING_SIZE;<br>  &#125;<br><br>  release(&amp;e1000_lockrx);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h4 id="实验测试"><a href="#实验测试" class="headerlink" title="实验测试"></a>实验测试</h4><p><img src="https://whileskies-pic.oss-cn-beijing.aliyuncs.com/20210711175600.png" srcset="/img/loading.gif" lazyload alt="image-20210711175600483"></p>
+<h4 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h4><p><a target="_blank" rel="noopener" href="https://github.com/whileskies/xv6-labs-2020/tree/net">https://github.com/whileskies/xv6-labs-2020/tree/net</a></p>
 
             </div>
             <hr>
             <div>
               <div class="post-metas mb-3">
                 
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/OS/">OS</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/6-S081/">6.S081</a>
+                    
+                  </div>
                 
               </div>
               
@@ -261,15 +295,15 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2021/07/08/hello-world/">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">Hello World</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
+                    
+                      <a href="/2021/07/11/6-S081-Lab10-mmap/">
+                        <span class="hidden-mobile">6.S081-Lab10: mmap</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
                     
                   </article>
                 </div>

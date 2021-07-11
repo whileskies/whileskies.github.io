@@ -1,0 +1,604 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="whileskies">
+  <meta name="keywords" content="">
+  
+  <title>6.S081-Lab4: traps - Hexo</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10.7.2/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"whileskies.xyz","root":"/","version":"1.8.11","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}},"search_path":"/local-search.xml"};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>whileskies</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/img/bg.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.2)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="6.S081-Lab4: traps">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2021-07-11 19:43" pubdate>
+        2021年7月11日 晚上
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      2k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      26
+       分钟
+    </span>
+  
+
+  
+  
+    
+      <!-- 不蒜子统计文章PV -->
+      <span id="busuanzi_container_page_pv" style="display: none">
+        <i class="iconfont icon-eye" aria-hidden="true"></i>
+        <span id="busuanzi_value_page_pv"></span> 次
+      </span>
+    
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">6.S081-Lab4: traps</h1>
+            
+            <div class="markdown-body">
+              <h2 id="Lab4-traps"><a href="#Lab4-traps" class="headerlink" title="Lab4: traps"></a>Lab4: traps</h2><p>Lab4为函数调用以及陷入相关的实验</p>
+<h4 id="RISC-V-assembly-easy"><a href="#RISC-V-assembly-easy" class="headerlink" title="RISC-V assembly (easy)"></a>RISC-V assembly (easy)</h4><p>该部分为一系列RISC-V汇编相关的问题，阅读<code>user/call.asm</code>对应的<code>call.asm</code>汇编文件，回答下面问题：</p>
+<ol>
+<li>哪些寄存器包含函数的参数，例如，对于<code>main</code>调用<code>printf</code>函数，哪个寄存器存参数13？</li>
+</ol>
+<p>对于RISC-V，前8个参数会放置在a0-a7寄存器，a2放置参数13，如下代码所示：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs assembly">void main(void) &#123;<br>  1c:	1101                	addi	sp,sp,-32<br>  1e:	ec06                	sd	ra,24(sp)<br>  20:	e822                	sd	s0,16(sp)<br>  22:	1000                	addi	s0,sp,32<br>  printf(&quot;%d %d\n&quot;, f(8)+1, 13);<br>  24:	4635                	li	a2,13<br>  26:	45b1                	li	a1,12<br>  28:	00000517          	auipc	a0,0x0<br>  2c:	7f850513          	addi	a0,a0,2040 # 820 &lt;malloc+0xea&gt;<br>  30:	00000097          	auipc	ra,0x0<br>  34:	648080e7          	jalr	1608(ra) # 678 &lt;printf&gt;<br><br></code></pre></td></tr></table></figure>
+
+<ol start="2">
+<li><code>main</code>汇编中哪里调用了函数<code>f</code>和<code>g</code>？</li>
+</ol>
+<p>由上述代码可以看到，<code>main</code>中直接得到了12，并放到了a1寄存器，可见编译器进行了优化，直接得到了结果</p>
+<ol start="3">
+<li><code>printf</code>的地址在哪？</li>
+</ol>
+<p>由汇编文件可以看到<code>printf</code>的地址为0x630，当做完alarm后，该汇编文件会发生变化，<code>printf</code>的地址也会变化</p>
+<ol start="4">
+<li>当要进入<code>main</code>中<code>printf</code>函数，执行<code>jalr</code>指令后ra寄存器的值是多少？</li>
+</ol>
+<p>ra应为函数调用中断点出的地址，也即<code>jalr</code>下一条指令的地址，为0x38</p>
+<ol start="5">
+<li>运行下列代码：</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">int</span> i = <span class="hljs-number">0x00646c72</span>;<br><span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;H%x Wo%s&quot;</span>, <span class="hljs-number">57616</span>, &amp;i);<br></code></pre></td></tr></table></figure>
+
+<p>输出依赖于RISC-V是小端系统，如果RISC-V是大端，i应如何设置得到相同结果，是否需要改变57616的值？</p>
+<p>小端即低字节放置在低地址，输出为：”HE110 World”，如果为大端i为0x726c6400，57616不需要改变</p>
+<ol start="6">
+<li>下列代码：</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;x=%d y=%d&quot;</span>, <span class="hljs-number">3</span>);<br></code></pre></td></tr></table></figure>
+
+<p><code>y=</code>将要输出什么，为什么会这样？</p>
+<p>输出结果为x=3，但y是一个不确定的值，实际可能为a2寄存器的值</p>
+<h4 id="Backtrace-moderate"><a href="#Backtrace-moderate" class="headerlink" title="Backtrace (moderate)"></a>Backtrace (moderate)</h4><h5 id="任务"><a href="#任务" class="headerlink" title="任务"></a>任务</h5><p>在<code>kernel/printf.c</code>实现<code>backtrace()</code>函数，用于打印函数调用过程，在<code>sys_sleep</code>中插入该函数，之后运行测试</p>
+<h5 id="过程"><a href="#过程" class="headerlink" title="过程"></a>过程</h5><ol>
+<li>内联汇编读取s0寄存器，即fp栈指针的值</li>
+</ol>
+<p>代码如下所示，fp(s0)寄存器用于保存当前函数栈帧的首地址：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">inline</span> uint64</span><br><span class="hljs-function"><span class="hljs-title">r_fp</span><span class="hljs-params">()</span></span><br><span class="hljs-function"></span>&#123;<br>  uint64 x;<br>  <span class="hljs-function"><span class="hljs-keyword">asm</span> <span class="hljs-title">volatile</span><span class="hljs-params">(<span class="hljs-string">&quot;mv %0, s0&quot;</span> : <span class="hljs-string">&quot;=r&quot;</span> (x) )</span></span>;<br>  <span class="hljs-keyword">return</span> x;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>栈帧结构</li>
+</ol>
+<p>如下所示，fp寄存器为当前栈帧的首地址，fp-8为上级函数的返回地址，fp-16为上级栈帧的首地址，一直沿着上级栈帧的地址，可以打印出整个栈的调用过程</p>
+<figure class="highlight gherkin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><code class="hljs gherkin">Stack<br>                   .<br>                   .<br>      +-&gt;          .<br>      |<span class="hljs-string">   +-----------------+   </span>|<br>      |<span class="hljs-string">   </span>|<span class="hljs-string"> return address  </span>|<span class="hljs-string">   </span>|<br>      |<span class="hljs-string">   </span>|<span class="hljs-string">   previous fp ------+</span><br><span class="hljs-string">      </span>|<span class="hljs-string">   </span>|<span class="hljs-string"> saved registers </span>|<br>      |<span class="hljs-string">   </span>|<span class="hljs-string"> local variables </span>|<br>      |<span class="hljs-string">   </span>|<span class="hljs-string">       ...       </span>|<span class="hljs-string"> &lt;-+</span><br><span class="hljs-string">      </span>|<span class="hljs-string">   +-----------------+   </span>|<br>      |<span class="hljs-string">   </span>|<span class="hljs-string"> return address  </span>|<span class="hljs-string">   </span>|<br>      +------ previous fp   |<span class="hljs-string">   </span>|<br>          |<span class="hljs-string"> saved registers </span>|<span class="hljs-string">   </span>|<br>          |<span class="hljs-string"> local variables </span>|<span class="hljs-string">   </span>|<br>      +-&gt; |<span class="hljs-string">       ...       </span>|<span class="hljs-string">   </span>|<br>      |<span class="hljs-string">   +-----------------+   </span>|<br>      |<span class="hljs-string">   </span>|<span class="hljs-string"> return address  </span>|<span class="hljs-string">   </span>|<br>      |<span class="hljs-string">   </span>|<span class="hljs-string">   previous fp ------+</span><br><span class="hljs-string">      </span>|<span class="hljs-string">   </span>|<span class="hljs-string"> saved registers </span>|<br>      |<span class="hljs-string">   </span>|<span class="hljs-string"> local variables </span>|<br>      |<span class="hljs-string">   </span>|<span class="hljs-string">       ...       </span>|<span class="hljs-string"> &lt;-+</span><br><span class="hljs-string">      </span>|<span class="hljs-string">   +-----------------+   </span>|<br>      |<span class="hljs-string">   </span>|<span class="hljs-string"> return address  </span>|<span class="hljs-string">   </span>|<br>      +------ previous fp   |<span class="hljs-string">   </span>|<br>          |<span class="hljs-string"> saved registers </span>|<span class="hljs-string">   </span>|<br>          |<span class="hljs-string"> local variables </span>|<span class="hljs-string">   </span>|<br>  $fp --&gt; |<span class="hljs-string">       ...       </span>|<span class="hljs-string">   </span>|<br>          +-----------------+   |<span class="hljs-string"></span><br><span class="hljs-string">          </span>|<span class="hljs-string"> return address  </span>|<span class="hljs-string">   </span>|<br>          |<span class="hljs-string">   previous fp ------+</span><br><span class="hljs-string">          </span>|<span class="hljs-string"> saved registers </span>|<br>  $sp --&gt; |<span class="hljs-string"> local variables </span>|<br>          +-----------------+<br><br></code></pre></td></tr></table></figure>
+
+<ol start="3">
+<li><code>backtrace</code>函数</li>
+</ol>
+<p>不断通过fp = fp-16获取栈帧地址，对于每个栈帧，打印上级函数的返回地址</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-function"><span class="hljs-keyword">void</span></span><br><span class="hljs-function"><span class="hljs-title">backtrace</span><span class="hljs-params">()</span></span><br><span class="hljs-function"></span>&#123;<br>  uint64 cur_fp = r_fp();<br>  <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;backtrace:\n&quot;</span>);<br>  <span class="hljs-keyword">for</span> (uint64 fp = cur_fp; fp &lt; PGROUNDUP(cur_fp); fp = *((uint64 *)(fp - <span class="hljs-number">16</span>)) ) &#123;<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%p\n&quot;</span>, *((uint64 *)(fp - <span class="hljs-number">8</span>)));<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h4 id="Alarm-hard"><a href="#Alarm-hard" class="headerlink" title="Alarm (hard)"></a>Alarm (hard)</h4><h5 id="任务-1"><a href="#任务-1" class="headerlink" title="任务"></a>任务</h5><p>该节你将为xv6添加对于进程使用CPU时间时能够周期性地发出警报的功能，这对于计算密集型进程限制使用CPU时间或者进程希望周期性地执行某个动作很有用；更进一步，你将实现一个初级形式的用户态中断/故障处理程序，和处理应用中的页错误类似</p>
+<p>首先添加<code>sigalarm(interval, handler)</code>系统调用，如果程序调用<code>sigalarm(n, fn)</code>，则程序每消耗n个ticks，内核调用程序的<code>fn</code>函数，当<code>fn</code>返回，程序应该在之前中断的地方恢复执行；一个tick是xv6的一个计时单元，由硬件时钟生成中断；如果一个应用调用<code>sigalarm(0, 0)</code>，内核应停止周期性地执行alarm调用</p>
+<h5 id="过程-1"><a href="#过程-1" class="headerlink" title="过程"></a>过程</h5><ol>
+<li>添加<code>sys_sigalarm</code>、<code>sys_sigreturn</code>两个系统调用定义</li>
+</ol>
+<p>按之前lab添加系统调用的方式即可</p>
+<ol start="2">
+<li>在<code>proc.h/struct proc</code>添加alarm相关的成员变量</li>
+</ol>
+<p>如下所示，<code>alarm_ticks</code>为alarm的周期，<code>alarm_handler_addr</code>为alarm处理函数的地址，该地址为用户进程的虚拟地址，这两个由<code>sys_sigalarm</code>系统调用参数设置；<code>ticks</code>为当前进程消耗的CPU时间，<code>last_ticks</code>为上一次执行alarm处理函数的开始CPU时间，<code>alarm_regs</code>为执行处理函数时保存与需要恢复的寄存器组值，<code>alarm_running</code>用来标记是否该进程正在执行处理函数中</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">int</span> alarm_ticks;                   <span class="hljs-comment">// lab alarm</span><br>uint64 alarm_handler_addr;         <span class="hljs-comment">// lab alarm</span><br>uint64 ticks;                      <span class="hljs-comment">// lab alarm</span><br>uint64 last_ticks;                 <span class="hljs-comment">// lab alarm</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">alarm_regs</span> <span class="hljs-title">regs</span>;</span>            <span class="hljs-comment">// lab alarm</span><br><span class="hljs-keyword">int</span> alarm_running;                 <span class="hljs-comment">// lab alarm</span><br></code></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>初始化<code>proc</code>结构体alarm相关变量</li>
+</ol>
+<p>在<code>proc.c/allocproc</code>函数中对上述定义的相关变量进行初始化，初始ticks为0</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// Init ticks for lab alarm</span><br>p-&gt;ticks = <span class="hljs-number">0</span>;<br>p-&gt;last_ticks = <span class="hljs-number">0</span>;<br>p-&gt;alarm_running = <span class="hljs-number">0</span>;<br></code></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>添加<code>sys_sigalarm</code>系统调用实现</li>
+</ol>
+<p><code>sys_sigalarm</code>对进程<code>proc</code>结构体的<code>alarm_ticks</code>、<code>alarm_handler_addr</code>变量进行设置，同时设置<code>last_ticks</code>为当前<code>ticks</code>，也即从当前开始计时</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-function">uint64 </span><br><span class="hljs-function"><span class="hljs-title">sys_sigalarm</span><span class="hljs-params">(<span class="hljs-keyword">void</span>)</span></span><br><span class="hljs-function"></span>&#123;<br>  <span class="hljs-keyword">int</span> ticks;<br>  uint64 handler_addr;<br><br>  <span class="hljs-keyword">if</span> (argint(<span class="hljs-number">0</span>, &amp;ticks) &lt; <span class="hljs-number">0</span> || argaddr(<span class="hljs-number">1</span>, &amp;handler_addr) &lt; <span class="hljs-number">0</span>)<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br><br>  <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">proc</span> *<span class="hljs-title">p</span> =</span> myproc();<br>  p-&gt;alarm_ticks = ticks;<br>  p-&gt;alarm_handler_addr = handler_addr;<br>  p-&gt;last_ticks = p-&gt;ticks;<br><br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ol start="5">
+<li>保存与恢复上下文</li>
+</ol>
+<p>当进程从当前运行地方切换到处理函数入口地址时，应保存切换时的CPU寄存器值，这里在<code>proc.h</code>定义<code>struct alarm_regs</code>结构体，其需要保存的寄存器基本和<code>trapframe</code>一致</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">alarm_regs</span></span><br><span class="hljs-class">&#123;</span><br>  uint64 epc;<br>  uint64 ra;<br>  uint64 sp;<br>  .....<br>  uint64 s10;<br>  uint64 t5;<br>  uint64 t6;<br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<p>当执行<code>sys_sigalarm</code>系统调用进入内核后，当前进程用户态的上下文，也即执行ecall指令时的状态，保存在进程结构体的<code>trapframe</code>中，由于<code>sys_sigalarm</code>系统调用返回后强制使得该进程跳转到了处理函数去执行，执行完成后在通过<code>sys_sigreturn</code>系统调用恢复，在这个处理函数执行过程中<code>trapframe</code>已经发生了很大变化，因此需要保证<code>sys_sigalarm</code>进入时的<code>trapframe</code>和<code>sys_sigreturn</code>返回时的<code>trapframe</code>一致，即可恢复到执行处理函数之前的位置继续执行</p>
+<p>在<code>trap.c</code>中定义保存与恢复上下文如下所示：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-function"><span class="hljs-keyword">void</span></span><br><span class="hljs-function"><span class="hljs-title">save_regs</span><span class="hljs-params">(struct proc *p)</span></span><br><span class="hljs-function"></span>&#123;<br>  p-&gt;regs.epc = p-&gt;trapframe-&gt;epc;<br>  p-&gt;regs.ra = p-&gt;trapframe-&gt;ra;<br>  p-&gt;regs.sp = p-&gt;trapframe-&gt;sp;<br>  .........<br>  p-&gt;regs.t3 = p-&gt;trapframe-&gt;t3;<br>  p-&gt;regs.t4 = p-&gt;trapframe-&gt;t4;<br>  p-&gt;regs.t5 = p-&gt;trapframe-&gt;t5;<br>  p-&gt;regs.t6 = p-&gt;trapframe-&gt;t6;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">restore_regs</span><span class="hljs-params">(struct proc *p)</span></span><br><span class="hljs-function"></span>&#123;<br>  p-&gt;trapframe-&gt;epc = p-&gt;regs.epc;<br>  p-&gt;trapframe-&gt;ra = p-&gt;regs.ra;<br>  p-&gt;trapframe-&gt;sp = p-&gt;regs.sp;<br>  p-&gt;trapframe-&gt;gp = p-&gt;regs.gp;<br>  .......<br>  p-&gt;trapframe-&gt;t5 = p-&gt;regs.t5;<br>  p-&gt;trapframe-&gt;t6 = p-&gt;regs.t6;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ol start="6">
+<li>处理时钟中断</li>
+</ol>
+<p>每当进程因为时钟中断陷入后，进程的CPU时间<code>ticks</code>增加，当alarm处理程序未在运行，并且设置了alarm周期时间，则当到期后就开始执行处理函数</p>
+<p>首先<code>p-&gt;last_ticks = p-&gt;ticks</code>设置最后调用处理函数的开始时间为当前<code>ticks</code></p>
+<p><code>save_regs(p)</code>保存了将要调用处理函数之前的CPU寄存器状态</p>
+<p><code>p-&gt;trapframe-&gt;epc = p-&gt;alarm_handler_addr</code>将陷入后的返回地址设置为处理函数的地址，当<code>trampoline.S/userret</code>最后的<code>sret</code>指令执行后，即将PC设置为了处理函数地址，也即执行该处理函数</p>
+<p><code>p-&gt;alarm_running = 1</code>表示该进程的处理函数正在执行</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// give up the CPU if this is a timer interrupt.</span><br><span class="hljs-comment">// lab alarm</span><br><span class="hljs-keyword">if</span>(which_dev == <span class="hljs-number">2</span>) &#123;<br>  p-&gt;ticks++;<br>  <span class="hljs-keyword">if</span> (p-&gt;alarm_ticks != <span class="hljs-number">0</span> &amp;&amp; p-&gt;alarm_running == <span class="hljs-number">0</span>) &#123;<br>    <span class="hljs-keyword">if</span> (p-&gt;last_ticks + p-&gt;alarm_ticks &lt;= p-&gt;ticks) &#123;<br>      p-&gt;last_ticks = p-&gt;ticks;<br><br>      save_regs(p);<br>      p-&gt;trapframe-&gt;epc = p-&gt;alarm_handler_addr;<br>      <br>      p-&gt;alarm_running = <span class="hljs-number">1</span>;<br>    &#125;<br>  &#125;<br></code></pre></td></tr></table></figure>
+
+<ol start="7">
+<li>添加<code>sys_sigreturn</code>系统调用实现</li>
+</ol>
+<p>在<code>sysproc.c</code>中添加<code>sys_sigreturn</code>实现，主要作用是用户的alarm处理函数执行后，恢复到处理函数执行前的状态</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-function">uint64 </span><br><span class="hljs-function"><span class="hljs-title">sys_sigreturn</span><span class="hljs-params">(<span class="hljs-keyword">void</span>)</span></span><br><span class="hljs-function"></span>&#123;<br>  <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">proc</span> *<span class="hljs-title">p</span> =</span> myproc();<br>  restore_regs(p);<br>  p-&gt;alarm_running = <span class="hljs-number">0</span>;<br><br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h5 id="运行结果"><a href="#运行结果" class="headerlink" title="运行结果"></a>运行结果</h5><p><img src="https://whileskies-pic.oss-cn-beijing.aliyuncs.com/20210402142321.png" srcset="/img/loading.gif" lazyload alt="image-20210402142321233"></p>
+<h4 id="实验测试"><a href="#实验测试" class="headerlink" title="实验测试"></a>实验测试</h4><p><img src="https://whileskies-pic.oss-cn-beijing.aliyuncs.com/20210402142613.png" srcset="/img/loading.gif" lazyload alt="image-20210402142613027"></p>
+<h4 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h4><p><a target="_blank" rel="noopener" href="https://github.com/whileskies/xv6-labs-2020/tree/traps">https://github.com/whileskies/xv6-labs-2020/tree/traps</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/OS/">OS</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/6-S081/">6.S081</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2021/07/11/6-S081-Lab5-xv6-lazy-page-allocation/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">6.S081-Lab5: xv6 lazy page allocation</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2021/07/11/6-S081-Lab3-page-tables/">
+                        <span class="hidden-mobile">6.S081-Lab3: page tables</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments" lazyload>
+                
+                  
+                
+                
+  <div id="valine"></div>
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#valine', function() {
+      Fluid.utils.createScript('https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js', function() {
+        var options = Object.assign(
+          {"appId":"9g01Ua9Sd4wyOYTwdnQxmFD8-gzGzoHsz","appKey":"l6mxYxD3DKx9h1kk0Cm6233n","placeholder":"说点什么","path":"window.location.pathname","avatar":"retro","meta":["nick","mail","link"],"pageSize":10,"lang":"zh-CN","highlight":false,"recordIP":false,"serverURLs":"","emojiCDN":null,"emojiMaps":null,"enableQQ":false,"requiredFields":[]},
+          {
+            el: "#valine",
+            path: window.location.pathname
+          }
+        )
+        new Valine(options);
+      });
+    });
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+  </div>
+  
+  <div class="statistics">
+    
+    
+
+    
+      
+        <!-- 不蒜子统计PV -->
+        <span id="busuanzi_container_site_pv" style="display: none">
+            总访问量 
+            <span id="busuanzi_value_site_pv"></span>
+             次
+          </span>
+      
+      
+        <!-- 不蒜子统计UV -->
+        <span id="busuanzi_container_site_uv" style="display: none">
+            总访客数 
+            <span id="busuanzi_value_site_uv"></span>
+             人
+          </span>
+      
+    
+  </div>
+
+
+  
+
+  
+</footer>
+
+
+  <!-- SCRIPTS -->
+  
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/tocbot@4.12.3/dist/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4.3.1/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js" ></script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+</body>
+</html>
